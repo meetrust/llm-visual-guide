@@ -230,7 +230,67 @@ pre.mermaid svg { max-width: 100%; height: auto; }
 .fig-wrap { display: grid; justify-items: center; gap: var(--sp-4); }
 .fig-wrap pre.mermaid { min-height: 0; width: 100%; }
 .fig-wrap pre.mermaid svg { display: block; margin: 0 auto; }
-#quadChart svg { display: block; margin: 0 auto; }
+/* ---------- FIG.07 quadrant: native HTML so every label stays at 12px; zones use the heat scale, dots the layer colours ---------- */
+.fig-stack { display: grid; gap: var(--sp-4); }
+.quad-wrap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--sp-6); align-items: center; }
+.quad { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: var(--sp-2); }
+.qy { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 2px 0; font-size: var(--fs-2xs); color: var(--faint); }
+.qy span { writing-mode: vertical-rl; letter-spacing: .12em; line-height: 1; }
+.qy i { flex: 1; width: 1px; background: linear-gradient(var(--faint), var(--rule-2)); }
+.qx { grid-column: 2; display: flex; align-items: center; gap: 4px; font-size: var(--fs-2xs); color: var(--faint); line-height: 1; }
+.qx i { flex: 1; height: 1px; background: linear-gradient(90deg, var(--rule-2), var(--faint)); }
+.qx span:first-child { margin-right: 4px; }
+.qx span:last-child { margin-left: 4px; }
+.qarrow { flex: none; width: 8px; height: 10px; color: var(--faint); }
+.qy .qarrow { width: 10px; height: 8px; margin-bottom: -4px; }
+.qp { position: relative; aspect-ratio: 1 / 1; border: 1px solid var(--rule-2); border-radius: var(--r-sm); background: #0d1320; }
+.qz { position: absolute; width: 50%; height: 50%; background: color-mix(in srgb, var(--qb) 62%, transparent); }
+.qz.q1 { top: 0; right: 0; border-top-right-radius: 7px; }
+.qz.q2 { top: 0; left: 0; border-top-left-radius: 7px; }
+.qz.q3 { bottom: 0; left: 0; border-bottom-left-radius: 7px; }
+.qz.q4 { bottom: 0; right: 0; border-bottom-right-radius: 7px; }
+.qgrid { position: absolute; inset: 0; pointer-events: none; background-image: linear-gradient(90deg, rgba(124, 200, 255, .07) 1px, transparent 1px), linear-gradient(0deg, rgba(124, 200, 255, .07) 1px, transparent 1px); background-size: 10% 10%; background-position: -1px 0, 0 1px; }
+.qcross { position: absolute; inset: 0; pointer-events: none; }
+.qcross::before, .qcross::after { content: ""; position: absolute; }
+.qcross::before { left: 50%; top: 0; bottom: 0; border-left: 1px dashed rgba(232, 237, 245, .22); }
+.qcross::after { top: 50%; left: 0; right: 0; border-top: 1px dashed rgba(232, 237, 245, .22); }
+.qtag { position: absolute; font: 600 var(--fs-2xs)/1 var(--font-display); letter-spacing: .12em; color: var(--q); }
+.qtag.q1 { top: 8px; right: 9px; }
+.qtag.q2 { top: 8px; left: 9px; }
+.qtag.q3 { bottom: 8px; left: 9px; }
+.qtag.q4 { bottom: 8px; right: 9px; }
+.qproj { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity var(--dur) var(--ease); }
+.qproj::before, .qproj::after { content: ""; position: absolute; }
+.qproj::before { left: calc(var(--x) * 100%); bottom: 0; height: calc(var(--y) * 100%); border-left: 1px dashed var(--c); }
+.qproj::after { left: 0; bottom: calc(var(--y) * 100%); width: calc(var(--x) * 100%); border-top: 1px dashed var(--c); }
+.qpt { position: absolute; z-index: 2; left: calc(var(--x) * 100%); bottom: calc(var(--y) * 100%); width: 0; height: 0; color: var(--ink-2); transition: opacity var(--dur) var(--ease); }
+.qpt::after { content: ""; position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%; }
+.qdot { position: absolute; left: -7px; top: -7px; width: 14px; height: 14px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 3px #0d1320, 0 0 0 4px color-mix(in srgb, var(--c) 55%, transparent); transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.qlb { position: absolute; white-space: nowrap; padding: 0 6px; border-radius: 6px; font: 500 var(--fs-2xs)/18px var(--font-mono); color: inherit; background: rgba(11, 16, 25, .92); border: 1px solid color-mix(in srgb, var(--c) 35%, var(--rule)); transition: color var(--dur), border-color var(--dur); }
+.qlb.t { bottom: 13px; left: 0; transform: translateX(-50%); }
+.qlb.b { top: 13px; left: 0; transform: translateX(-50%); }
+.qlb.r { left: 14px; top: -10px; }
+.qlb.l { right: 14px; top: -10px; }
+.qpt:focus-visible { outline: none; }
+.qpt:focus-visible .qdot { outline: 2px solid var(--amber); outline-offset: 5px; }
+.quad.is-focus .qpt:not(.on) { opacity: .28; }
+.quad.is-focus .qproj.on { opacity: .85; }
+.qpt.on { color: var(--ink); }
+.qpt.on .qdot { transform: scale(1.2); box-shadow: 0 0 0 3px #0d1320, 0 0 0 4px var(--c), 0 0 16px var(--c); }
+.qpt.on .qlb { border-color: var(--c); }
+.quad-key { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
+.qk { padding: var(--sp-3) 10px var(--sp-2); border: 1px solid var(--rule); border-top: 2px solid color-mix(in srgb, var(--q) 70%, transparent); border-radius: var(--r-md); background: linear-gradient(180deg, color-mix(in srgb, var(--qb) 50%, transparent), transparent 75%); }
+.qk h4 { margin: 0; display: flex; align-items: baseline; gap: var(--sp-2); font-size: var(--fs-sm); line-height: 1.4; color: var(--q); }
+.qk h4 b { font: 600 var(--fs-2xs) var(--font-display); letter-spacing: .12em; }
+.qk h4 span { margin-left: auto; font: 600 var(--fs-2xs) var(--font-display); color: var(--faint); }
+.qk p { margin: 4px 0 var(--sp-2); font-size: var(--fs-2xs); line-height: 1.6; color: var(--dim); text-wrap: pretty; }
+.qk ul { list-style: none; margin: 0; padding: 0; }
+.qk a { display: grid; grid-template-columns: 6px minmax(0, 1fr) auto; align-items: center; gap: 6px; min-height: 26px; margin: 0 -6px; padding: 0 6px; border-radius: 6px; color: var(--ink-2); font-size: var(--fs-xs); transition: background var(--dur), color var(--dur); }
+.qk a i { width: 6px; height: 6px; border-radius: 50%; background: var(--c); }
+.qk a span { font-family: var(--font-mono); font-size: var(--fs-2xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qk a b { font: 600 var(--fs-2xs) var(--font-display); color: var(--ink); font-variant-numeric: tabular-nums; }
+.qk a.on { color: var(--ink); background: rgba(255, 255, 255, .06); }
+.qk .none { display: flex; align-items: center; min-height: 26px; font-size: var(--fs-2xs); color: var(--faint); }
 #pieChart .legend { display: none; }
 .fig-key.compact { width: auto; grid-template-columns: repeat(2, auto); justify-content: center; gap: 4px var(--sp-6); }
 .fig-key.compact li { grid-template-columns: 12px auto; }
@@ -490,6 +550,7 @@ tbody tr:last-child th[scope="row"] { border-bottom: 0; }
   .track .bd:hover { border-color: var(--c); transform: translateX(3px); }
   .copy:hover { color: var(--ink); border-color: var(--amber); background: rgba(255, 179, 71, .08); }
   .totop:hover { border-color: var(--amber); }
+  .qpt:hover, .qk a:hover { text-decoration: none; }
   .dn:hover { transform: var(--lift); border-color: var(--c); box-shadow: 0 14px 34px -20px var(--c); }
   a.dn:hover::after { color: var(--c); transform: translate(2px, -2px); }
 }
@@ -522,6 +583,7 @@ tbody tr:last-child th[scope="row"] { border-bottom: 0; }
   main { padding-top: var(--sp-6); }
 }
 @media (max-width: 760px) {
+  .qp { aspect-ratio: 1 / 1.08; }
   :root { --fs-body: 15px; --fs-lg: 17px; --fs-xl: 20px; }
   .col { gap: 72px; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -558,6 +620,8 @@ tbody tr:last-child th[scope="row"] { border-bottom: 0; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+@media (max-width: 900px) { .quad-wrap { grid-template-columns: minmax(0, 1fr); gap: var(--sp-5); } .quad { width: 100%; max-width: 560px; margin: 0 auto; } }
+@media (max-width: 520px) { .quad-key { grid-template-columns: minmax(0, 1fr); } }
 </style>
 </head>
 <body>
@@ -1359,27 +1423,51 @@ acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ prob
             </table>
           </div>
 
-          <div class="grid-2">
+          <div class="fig-stack">
             <figure class="fig">
               <figcaption><b>FIG.07 · 耗时 × 难度象限</b><span>右上为硬骨头</span></figcaption>
               <div class="fig-body">
-<pre class="mermaid" id="quadChart" aria-label="耗时与难度象限图">
-quadrantChart
-    x-axis 短耗时 --> 长耗时
-    y-axis 低难度 --> 高难度
-    quadrant-1 硬骨头区
-    quadrant-2 短而陡
-    quadrant-3 快速上手
-    quadrant-4 长线积累
-    micrograd: [0.12, 0.22] color: #7cc8ff, radius: 7
-    minbpe: [0.14, 0.34] color: #ffd166, radius: 7
-    nanoGPT: [0.30, 0.56] color: #ff9f5a, radius: 7
-    autoresearch: [0.22, 0.62] color: #ff7ad9, radius: 7
-    nanochat: [0.46, 0.78] color: #4fd6a0, radius: 7
-    nn-zero-to-hero: [0.66, 0.54] color: #a99bff, radius: 7
-    llm.c: [0.86, 0.93] color: #ff6b6b, radius: 7
-</pre>
+                <div class="quad-wrap">
+                <div class="quad" id="quad">
+                  <div class="qy" aria-hidden="true"><span>高难度</span><svg class="qarrow" viewBox="0 0 10 8" aria-hidden="true"><path d="M1.5 6.5 5 2l3.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><i></i><span>低难度</span></div>
+                  <div class="qp" role="group" aria-label="耗时与难度象限图：横轴耗时由短到长，纵轴难度由低到高">
+                    <span class="qz q1" style="--qb: #4f1c24"></span><span class="qz q2" style="--qb: #4a2c16"></span><span class="qz q3" style="--qb: #123a30"></span><span class="qz q4" style="--qb: #12304a"></span><span class="qgrid" aria-hidden="true"></span><span class="qcross" aria-hidden="true"></span><span class="qtag q1" style="--q: #ffa3aa" aria-hidden="true">Q1</span><span class="qtag q2" style="--q: #ffbe8a" aria-hidden="true">Q2</span><span class="qtag q3" style="--q: #86ebc0" aria-hidden="true">Q3</span><span class="qtag q4" style="--q: #9fd4ff" aria-hidden="true">Q4</span>
+                    <span class="qproj" data-k="micrograd" style="--c: var(--l1); --x: 0.12; --y: 0.22"></span><span class="qproj" data-k="minbpe" style="--c: var(--l3); --x: 0.14; --y: 0.34"></span><span class="qproj" data-k="autoresearch" style="--c: var(--l7); --x: 0.22; --y: 0.62"></span><span class="qproj" data-k="nanogpt" style="--c: var(--l4); --x: 0.3; --y: 0.56"></span><span class="qproj" data-k="nanochat" style="--c: var(--l6); --x: 0.46; --y: 0.78"></span><span class="qproj" data-k="nn" style="--c: var(--l2); --x: 0.66; --y: 0.54"></span><span class="qproj" data-k="llmc" style="--c: var(--l5); --x: 0.86; --y: 0.93"></span>
+                    <a class="qpt" href="#m-micrograd" data-k="micrograd" style="--c: var(--l1); --x: 0.12; --y: 0.22" aria-label="micrograd：预计 8–12 h，快速上手（Q3）"><i class="qdot"></i><span class="qlb t" aria-hidden="true">micrograd</span></a>
+                    <a class="qpt" href="#m-minbpe" data-k="minbpe" style="--c: var(--l3); --x: 0.14; --y: 0.34" aria-label="minbpe：预计 8–12 h，快速上手（Q3）"><i class="qdot"></i><span class="qlb t" aria-hidden="true">minbpe</span></a>
+                    <a class="qpt" href="#m-autoresearch" data-k="autoresearch" style="--c: var(--l7); --x: 0.22; --y: 0.62" aria-label="autoresearch：预计 10–20 h，短而陡（Q2）"><i class="qdot"></i><span class="qlb t" aria-hidden="true">autoresearch</span></a>
+                    <a class="qpt" href="#m-nanogpt" data-k="nanogpt" style="--c: var(--l4); --x: 0.3; --y: 0.56" aria-label="nanoGPT：预计 15–25 h，短而陡（Q2）"><i class="qdot"></i><span class="qlb t" aria-hidden="true">nanoGPT</span></a>
+                    <a class="qpt" href="#m-nanochat" data-k="nanochat" style="--c: var(--l6); --x: 0.46; --y: 0.78" aria-label="nanochat：预计 25–40 h，短而陡（Q2）"><i class="qdot"></i><span class="qlb t" aria-hidden="true">nanochat</span></a>
+                    <a class="qpt" href="#m-nn" data-k="nn" style="--c: var(--l2); --x: 0.66; --y: 0.54" aria-label="nn-zero-to-hero：预计 40–60 h，硬骨头区（Q1）"><i class="qdot"></i><span class="qlb t" aria-hidden="true">nn-zero-to-hero</span></a>
+                    <a class="qpt" href="#m-llmc" data-k="llmc" style="--c: var(--l5); --x: 0.86; --y: 0.93" aria-label="llm.c：预计 40–80 h，硬骨头区（Q1）"><i class="qdot"></i><span class="qlb t" aria-hidden="true">llm.c</span></a>
+                  </div>
+                  <div class="qx" aria-hidden="true"><span>短耗时</span><i></i><svg class="qarrow" viewBox="0 0 8 10" aria-hidden="true"><path d="M1.5 1.5 6 5l-4.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span>长耗时</span></div>
+                </div>
+                <div class="quad-key">
+                  <section class="qk" style="--q: #ffbe8a; --qb: #4a2c16">
+                    <h4><b>Q2</b>短而陡<span>3 项</span></h4>
+                    <p>耗时不长但门槛高，集中突破</p>
+                    <ul><li><a href="#m-autoresearch" data-k="autoresearch" style="--c: var(--l7)"><i></i><span>autoresearch</span><b>10–20 h</b></a></li><li><a href="#m-nanogpt" data-k="nanogpt" style="--c: var(--l4)"><i></i><span>nanoGPT</span><b>15–25 h</b></a></li><li><a href="#m-nanochat" data-k="nanochat" style="--c: var(--l6)"><i></i><span>nanochat</span><b>25–40 h</b></a></li></ul>
+                  </section>
+                  <section class="qk" style="--q: #ffa3aa; --qb: #4f1c24">
+                    <h4><b>Q1</b>硬骨头区<span>2 项</span></h4>
+                    <p>耗时长、门槛高，分阶段推进</p>
+                    <ul><li><a href="#m-nn" data-k="nn" style="--c: var(--l2)"><i></i><span>nn-zero-to-hero</span><b>40–60 h</b></a></li><li><a href="#m-llmc" data-k="llmc" style="--c: var(--l5)"><i></i><span>llm.c</span><b>40–80 h</b></a></li></ul>
+                  </section>
+                  <section class="qk" style="--q: #86ebc0; --qb: #123a30">
+                    <h4><b>Q3</b>快速上手<span>2 项</span></h4>
+                    <p>投入小、见效快，优先完成</p>
+                    <ul><li><a href="#m-micrograd" data-k="micrograd" style="--c: var(--l1)"><i></i><span>micrograd</span><b>8–12 h</b></a></li><li><a href="#m-minbpe" data-k="minbpe" style="--c: var(--l3)"><i></i><span>minbpe</span><b>8–12 h</b></a></li></ul>
+                  </section>
+                  <section class="qk" style="--q: #9fd4ff; --qb: #12304a">
+                    <h4><b>Q4</b>长线积累<span>0 项</span></h4>
+                    <p>难度不高但耗时长，穿插进行</p>
+                    <ul><li class="none">暂无项目</li></ul>
+                  </section>
+                </div>
+                </div>
               </div>
+              <div class="fig-foot"><span>点位为经验估计（相对位置）</span><span>耗时区间取自上方热力表</span><span>悬停或聚焦查看投影线，点击跳到对应模块</span></div>
             </figure>
             <figure class="fig">
               <figcaption><b>FIG.08 · 时间投入分布</b><span>标准路线合计约 200 小时</span></figcaption>
@@ -1602,7 +1690,7 @@ pie
   var css = getComputedStyle(document.documentElement);
   function token(name) { return css.getPropertyValue(name).trim(); }
 
-  /* ---------- Mermaid: radar, quadrant, pie — themed from the same tokens ---------- */
+  /* ---------- Mermaid: radar, pie — themed from the same tokens ---------- */
   function renderDiagrams() {
     if (!window.mermaid) { document.documentElement.classList.add("no-mermaid"); return; }
     var T = {
@@ -1616,11 +1704,6 @@ pie
       pie5: token("--l3"), pie6: token("--l5"), pie7: token("--l6"), pie8: token("--l7"),
       pieTitleTextColor: token("--ink"), pieSectionTextColor: token("--void"), pieLegendTextColor: "#c9d3e3",
       pieStrokeColor: token("--panel"), pieOuterStrokeColor: token("--rule-2"), pieOpacity: "0.95",
-      quadrant1Fill: "#2a1a22", quadrant2Fill: "#2a2317", quadrant3Fill: "#12251f", quadrant4Fill: "#142033",
-      quadrant1TextFill: "#ff9aa2", quadrant2TextFill: "#ffd08a", quadrant3TextFill: "#7fe3b8", quadrant4TextFill: "#9fd4ff",
-      quadrantPointFill: token("--amber"), quadrantPointTextFill: token("--ink"),
-      quadrantXAxisTextFill: token("--dim"), quadrantYAxisTextFill: token("--dim"), quadrantTitleFill: token("--ink"),
-      quadrantInternalBorderStrokeFill: token("--rule"), quadrantExternalBorderStrokeFill: token("--rule-2"),
       cScale0: token("--l4"), cScale1: token("--l5"), cScale2: token("--l6"), cScale3: token("--l7"),
       radar: { graticuleColor: token("--rule-2"), axisColor: "#5b6a85", curveOpacity: 0.22, curveStrokeWidth: 2.5, graticuleOpacity: 0.5 }
     };
@@ -1633,12 +1716,11 @@ pie
         var host = document.getElementById(id).parentNode, cs = getComputedStyle(host);
         return (host.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) || 400;
       };
-      var qw = Math.min(520, boxW("quadChart")), R = Math.max(80, Math.min(170, Math.round((boxW("radarChart") - 160) / 1.82)));
+      var R = Math.max(80, Math.min(170, Math.round((boxW("radarChart") - 160) / 1.82)));
       pres.forEach(function (el) { el.style.display = ""; });
       T.radar.axisLabelFontSize = 13; T.radar.legendFontSize = 12;
       window.mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "base", themeVariables: T,
-        radar: { curveTension: 0, width: 2 * R, height: 2 * R, marginTop: 28, marginBottom: 28, marginLeft: 96, marginRight: 96, axisLabelFactor: 1.1 },
-        quadrantChart: { chartWidth: qw, chartHeight: Math.min(qw, 440), pointLabelFontSize: 12, quadrantLabelFontSize: 14, xAxisLabelFontSize: 13, yAxisLabelFontSize: 13 } });
+        radar: { curveTension: 0, width: 2 * R, height: 2 * R, marginTop: 28, marginBottom: 28, marginLeft: 96, marginRight: 96, axisLabelFactor: 1.1 } });
       return window.mermaid.run({ querySelector: "pre.mermaid" });
     }).then(function () {
       /* FIG.08: crop the pie to its disc; the HTML key below replaces Mermaid's legend so it stays legible on phones */
@@ -1655,47 +1737,66 @@ pie
       var rs = document.querySelector("#radarChart svg");
       if (rs) { [].forEach.call(rs.querySelectorAll(".radarLegendText"), function (t) { t.parentNode.remove(); });
         var bb = rs.getBBox(); rs.setAttribute("viewBox", (bb.x - 6) + " " + (bb.y - 6) + " " + (bb.width + 12) + " " + (bb.height + 12)); rs.style.maxWidth = Math.ceil(bb.width + 12) + "px"; }
-      /* FIG.07: place each point label above its dot, else beside or below it, whichever hits no other dot, label or quadrant title */
-      var qs = document.querySelector("#quadChart svg");
-      if (qs) {
-        var plot = qs.querySelector(".quadrants").getBBox();
-        var tBox = function (t) { var b = t.getBBox(), m = t.transform.baseVal.consolidate().matrix; return { x: b.x + m.e, y: b.y + m.f, w: b.width, h: b.height }; };
-        var hit = function (a, b) { return a.x < b.x + b.w + 2 && b.x < a.x + a.w + 2 && a.y < b.y + b.h + 1 && b.y < a.y + a.h + 1; };
-        var inside = function (a) { return a.x >= plot.x + 2 && a.x + a.w <= plot.x + plot.width - 2 && a.y >= plot.y + 2 && a.y + a.h <= plot.y + plot.height - 2; };
-        var dots = [].map.call(qs.querySelectorAll(".data-point circle"), function (c) { var b = c.getBBox(); return { x: b.x, y: b.y, w: b.width, h: b.height }; });
-        [].forEach.call(qs.querySelectorAll(".quadrant"), function (g) {
-          var t = g.querySelector("text"), q = g.querySelector("rect").getBBox(), b = tBox(t), m = t.transform.baseVal.consolidate().matrix, dx = 0;
-          dots.forEach(function (d) { if (hit(b, d)) dx = d.x + d.w / 2 > b.x + b.w / 2 ? d.x - 4 - (b.x + b.w) : d.x + d.w + 4 - b.x; });
-          dx = Math.max(q.x + 6 - b.x, Math.min(q.x + q.width - 6 - (b.x + b.w), dx));
-          if (dx) t.setAttribute("transform", "translate(" + (m.e + dx) + ", " + m.f + ")");
-        });
-        var fixed = [].map.call(qs.querySelectorAll(".quadrant text"), tBox);
-        var pts = [].map.call(qs.querySelectorAll(".data-point"), function (g) {
-          var c = g.querySelector("circle").getBBox(), t = g.querySelector("text");
-          return { dot: { x: c.x, y: c.y, w: c.width, h: c.height }, t: t, box: tBox(t) };
-        });
-        pts.forEach(function (p) {
-          var clear = function (box) {
-            return inside(box) && !fixed.some(function (f) { return hit(box, f); }) &&
-              !pts.some(function (o) { return hit(box, o.dot) || (o !== p && hit(box, o.box)); });
-          };
-          var d = p.dot, w = p.box.w, h = p.box.h, cx = d.x + d.w / 2, cy = d.y + d.h / 2;
-          [{ x: cx - w / 2, y: d.y - 3 - h, a: "middle" }, { x: d.x + d.w + 4, y: cy - h / 2, a: "start" }, { x: d.x - 4 - w, y: cy - h / 2, a: "end" }, { x: cx - w / 2, y: d.y + d.h + 3, a: "middle" }].some(function (c) {
-            var box = { x: c.x, y: c.y, w: w, h: h };
-            if (!clear(box)) return false;
-            var ax = c.a === "middle" ? c.x + w / 2 : c.a === "start" ? c.x : c.x + w;
-            p.t.setAttribute("text-anchor", c.a);
-            p.t.setAttribute("transform", "translate(" + ax + ", " + (c.y + (p.box.y - p.t.transform.baseVal.consolidate().matrix.f) * -1) + ")");
-            p.box = tBox(p.t);
-            return true;
-          });
-        });
-      }
     }).catch(function (err) {
       document.documentElement.classList.add("no-mermaid");
       if (window.console) console.error(err);
     });
   }
+
+  /* ---------- FIG.07 quadrant: label placement and focus highlight ---------- */
+  (function () {
+    var quad = document.getElementById("quad");
+    if (!quad) return;
+    var plot = quad.querySelector(".qp");
+    var pts = [].slice.call(plot.querySelectorAll(".qpt"));
+    var projs = [].slice.call(plot.querySelectorAll(".qproj"));
+    var keys = [].slice.call(quad.parentNode.querySelectorAll(".qk a"));
+    var tags = [].slice.call(plot.querySelectorAll(".qtag"));
+    function rel(el) { var r = el.getBoundingClientRect(), p = plot.getBoundingClientRect(); return { x: r.left - p.left, y: r.top - p.top, w: r.width, h: r.height }; }
+    function hit(a, b) { return a.x < b.x + b.w + 2 && b.x < a.x + a.w + 2 && a.y < b.y + b.h + 2 && b.y < a.y + a.h + 2; }
+    /* each label tries above, right, left, below its dot and keeps the first spot that hits nothing (else the least crowded one) */
+    function place() {
+      var W = plot.clientWidth, H = plot.clientHeight;
+      if (!W) return;
+      var dots = pts.map(function (p) { return rel(p.querySelector(".qdot")); });
+      var taken = tags.map(rel);
+      pts.forEach(function (p, i) {
+        var lb = p.querySelector(".qlb"), best = "t", bestScore = Infinity;
+        ["t", "r", "l", "b"].some(function (pos) {
+          lb.className = "qlb " + pos;
+          var b = rel(lb), score = 0;
+          if (b.x < 3 || b.y < 3 || b.x + b.w > W - 3 || b.y + b.h > H - 3) score += 100;
+          dots.forEach(function (d, j) { if (j !== i && hit(b, d)) score += 10; });
+          taken.forEach(function (t) { if (hit(b, t)) score += 10; });
+          if (score < bestScore) { bestScore = score; best = pos; }
+          return score === 0;
+        });
+        lb.className = "qlb " + best;
+        taken.push(rel(lb));
+      });
+    }
+    function on(k) {
+      quad.classList.add("is-focus");
+      pts.forEach(function (p) { p.classList.toggle("on", p.dataset.k === k); });
+      projs.forEach(function (p) { p.classList.toggle("on", p.dataset.k === k); });
+      keys.forEach(function (a) { a.classList.toggle("on", a.dataset.k === k); });
+    }
+    function off() {
+      quad.classList.remove("is-focus");
+      pts.concat(projs, keys).forEach(function (el) { el.classList.remove("on"); });
+    }
+    /* hover highlight only for a real mouse; keyboard focus only when :focus-visible; a tap or click never leaves it dimmed */
+    pts.concat(keys).forEach(function (el) {
+      el.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse") on(el.dataset.k); });
+      el.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") off(); });
+      el.addEventListener("focus", function () { var kb = true; try { kb = el.matches(":focus-visible"); } catch (err) {} if (kb) on(el.dataset.k); });
+      el.addEventListener("blur", off);
+      el.addEventListener("click", off);
+    });
+    place();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(place).catch(function () {});
+    if (window.ResizeObserver) { new ResizeObserver(function () { window.requestAnimationFrame(place); }).observe(plot); }
+  })();
 
   /* ---------- FIG.01 dependency map: SVG edges measured from the live layout ---------- */
   var EDGES = [
@@ -1837,7 +1938,7 @@ pie
   document.getElementById("scrim").addEventListener("click", function () { setDrawer(false, true); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && body.classList.contains("toc-open")) setDrawer(false, true); });
 
-  Array.prototype.forEach.call(document.querySelectorAll('.toc a[href^="#"], a.dn[href^="#"]'), function (a) {
+  Array.prototype.forEach.call(document.querySelectorAll('.toc a[href^="#"], a.dn[href^="#"], a.qpt[href^="#"], .qk a[href^="#"]'), function (a) {
     a.addEventListener("click", function (e) {
       var el = document.getElementById(a.getAttribute("href").slice(1));
       if (!el) return;
