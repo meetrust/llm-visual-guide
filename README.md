@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://meetrust.github.io/llm-visual-guide/"><img src="docs/images/banner.webp" alt="大模型可视化学习指南 · LLM Zero to One · A Visual Learning Guide" width="100%"></a>
+<sub><b>KARPATHY · ZERO TO HERO · 7 REPOS</b></sub>
 
 # 大模型可视化学习指南
 
@@ -12,19 +12,34 @@
 
 [![在线访问 Live](https://img.shields.io/badge/%E5%9C%A8%E7%BA%BF%E8%AE%BF%E9%97%AE%20Live-meetrust.github.io-ffb347?style=flat-square&labelColor=0a0d14)](https://meetrust.github.io/llm-visual-guide/) [![Deploy](https://github.com/meetrust/llm-visual-guide/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/meetrust/llm-visual-guide/actions/workflows/deploy-pages.yml)
 
-[在线访问 Live](https://meetrust.github.io/llm-visual-guide/) · [概览 Overview](#概览--overview) · [页面内容 Contents](#页面内容--contents) · [项目结构 Structure](#项目结构--structure) · [本地预览 Run locally](#本地预览--run-locally)
+[阶梯 Ladder](#七级抽象阶梯--the-seven-level-ladder) · [概览 Overview](#概览--overview) · [页面内容 Contents](#页面内容--contents) · [项目结构 Structure](#项目结构--structure) · [本地预览 Run locally](#本地预览--run-locally)
 
 </div>
+
+## 七级抽象阶梯 · The seven-level ladder
+
+| 层级 Level | 仓库 Repo | 分类 Area | 你会亲手造出 What you build |
+|:---:|---|---|---|
+| [![L7](https://img.shields.io/badge/L7-%20-ff7ad9?style=flat-square&labelColor=111723)](https://meetrust.github.io/llm-visual-guide/#m-autoresearch) | [`autoresearch`](https://github.com/karpathy/autoresearch) | 智能体<br><sub>Agents</sub> | 让 Coding Agent 通宵替你做实验<br><sub>A coding agent that runs your training experiments overnight</sub> |
+| [![L6](https://img.shields.io/badge/L6-%20-4fd6a0?style=flat-square&labelColor=111723)](https://meetrust.github.io/llm-visual-guide/#m-nanochat) | [`nanochat`](https://github.com/karpathy/nanochat) | 产品<br><sub>Product</sub> | 从分词器到 Web UI 的端到端聊天模型<br><sub>An end-to-end chat model, from tokenizer to web UI</sub> |
+| [![L5](https://img.shields.io/badge/L5-%20-ff6b6b?style=flat-square&labelColor=111723)](https://meetrust.github.io/llm-visual-guide/#m-llmc) | [`llm.c`](https://github.com/karpathy/llm.c) | 底层 · 选修<br><sub>Systems · optional</sub> | 不依赖 PyTorch 的 C/CUDA GPT-2 训练器<br><sub>A GPT-2 trainer in raw C/CUDA, without PyTorch</sub> |
+| [![L4](https://img.shields.io/badge/L4-%20-ff9f5a?style=flat-square&labelColor=111723)](https://meetrust.github.io/llm-visual-guide/#m-nanogpt) | [`nanoGPT`](https://github.com/karpathy/nanoGPT) | 训练<br><sub>Training</sub> | 可复现 GPT-2 的训练 / 微调循环<br><sub>A training and fine-tuning loop that reproduces GPT-2</sub> |
+| [![L3](https://img.shields.io/badge/L3-%20-ffd166?style=flat-square&labelColor=111723)](https://meetrust.github.io/llm-visual-guide/#m-minbpe) | [`minbpe`](https://github.com/karpathy/minbpe) | Token<br><sub>Tokens</sub> | 与 GPT-4 同款输出的 BPE 分词器<br><sub>A BPE tokenizer whose output matches GPT-4's</sub> |
+| [![L2](https://img.shields.io/badge/L2-%20-a99bff?style=flat-square&labelColor=111723)](https://meetrust.github.io/llm-visual-guide/#m-nn) | [`nn-zero-to-hero`](https://github.com/karpathy/nn-zero-to-hero) | 模型<br><sub>Models</sub> | bigram → MLP → WaveNet → Transformer<br><sub>Eight video lectures, from bigram to Transformer</sub> |
+| [![L1](https://img.shields.io/badge/L1-%20-7cc8ff?style=flat-square&labelColor=111723)](https://meetrust.github.io/llm-visual-guide/#m-micrograd) | [`micrograd`](https://github.com/karpathy/micrograd) | 数学<br><sub>Math</sub> | 约 100 行的标量反向传播引擎<br><sub>A scalar backprop engine in about 100 lines</sub> |
+
+<sub>越往上，抽象越高、系统越完整；越往下，越接近第一性原理。L5 是选修分支，主线可以从 L4 直接走到 L6。点击层级标签查看页面上的模块拆解。</sub><br>
+<sub>Higher levels are more abstract and more complete; lower levels are closer to first principles. L5 is an optional branch: the main path can go straight from L4 to L6. Click a level tag to open its deep dive on the site.</sub>
 
 ## 概览 · Overview
 
 以 Andrej Karpathy 的七个开源仓库为主线，把“从零构建大模型”整理成一份可视化学习手册。
 
-七个仓库对应七级抽象阶梯：micrograd、nn-zero-to-hero、minbpe、nanoGPT、llm.c、nanochat、autoresearch。每上一级，你都会亲手造出一个能运行的东西。页面把它们的依赖关系、核心机制、工程亮点、投入成本和学习路线放在同一张“地图”上，适合想系统补齐大模型底层能力的工程师。
+七个仓库对应上面的七级抽象阶梯，每上一级，你都会亲手造出一个能运行的东西。页面把它们的依赖关系、核心机制、工程亮点、投入成本和学习路线放在同一张“地图”上，适合想系统补齐大模型底层能力的工程师。
 
 A visual study guide to building large language models from scratch, following Andrej Karpathy's seven open-source repositories.
 
-The seven repositories form a seven-step abstraction ladder: micrograd, nn-zero-to-hero, minbpe, nanoGPT, llm.c, nanochat and autoresearch. At every step you build something that actually runs. The page puts their dependencies, core mechanisms, engineering highlights, costs and learning roadmap on a single map, for engineers who want a solid grasp of how LLMs work under the hood.
+The seven repositories form the ladder above, and at every step you build something that actually runs. The page puts their dependencies, core mechanisms, engineering highlights, costs and learning roadmap on a single map, for engineers who want a solid grasp of how LLMs work under the hood.
 
 | **7** | **307.8k** | **≈200 h** | **$75–175** |
 |:---:|:---:|:---:|:---:|
@@ -48,7 +63,6 @@ The seven repositories form a seven-step abstraction ladder: micrograd, nn-zero-
 ```
 index.html            页面本体 · the page itself
 docs/handbook.md      Markdown 版手册 · the handbook in Markdown
-docs/images/          README 首屏大图 · README banner
 tools/audit.js        页面检查脚本 · page check script
 .github/workflows/    推送到 main 后自动发布 · publishes to GitHub Pages on push to main
 ```
