@@ -10,7 +10,7 @@
 <br>
 *From a 100-line backprop engine all the way to an agent that runs your training experiments overnight.*
 
-[![在线访问 Live](https://img.shields.io/badge/%E5%9C%A8%E7%BA%BF%E8%AE%BF%E9%97%AE%20Live-meetrust.github.io-ffb347?style=flat-square&labelColor=0a0d14)](https://meetrust.github.io/llm-visual-guide/) [![Deploy](https://github.com/meetrust/llm-visual-guide/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/meetrust/llm-visual-guide/actions/workflows/deploy-pages.yml)
+[![在线访问 Live](https://img.shields.io/badge/%E5%9C%A8%E7%BA%BF%E8%AE%BF%E9%97%AE%20Live-meetrust.github.io-ffb347?style=flat-square&labelColor=111723)](https://meetrust.github.io/llm-visual-guide/) [![Deploy](https://github.com/meetrust/llm-visual-guide/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/meetrust/llm-visual-guide/actions/workflows/deploy-pages.yml)
 
 [阶梯 Ladder](#七级抽象阶梯--the-seven-level-ladder) · [概览 Overview](#概览--overview) · [页面内容 Contents](#页面内容--contents) · [项目结构 Structure](#项目结构--structure) · [本地预览 Run locally](#本地预览--run-locally)
 
