@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="基于 Karpathy Zero to Hero 七个开源仓库的大模型从零到一可视化学习指南：依赖图谱、模块拆解、对比表、看板与 17 周学习路线。">
+<title>大模型可视化学习指南</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;600&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script defer src="https://cdn.jsdelivr.net/npm/mermaid@11.16.1/dist/mermaid.min.js"></script>
+<style>
+/* Layout idea: an engineering lab manual on a dark blueprint grid. Sticky TOC rail + one reading column.
+   Seven layer colours (math -> agent) are the only data colours; amber is the single UI accent.
+   Every diagram is either a native component or a Mermaid chart themed with the same tokens. */
+:root {
+  /* surfaces & text */
+  --void: #0a0d14;
+  --panel: #111723;
+  --panel-2: #172031;
+  --ink: #e8edf5;
+  --dim: #a3aec0;
+  --faint: #7d8aa3;
+  --rule: #243049;
+  --rule-2: #33425f;
+  /* single UI accent */
+  --amber: #ffb347;
+  --ice: #7cc8ff;
+  /* layer palette (data encoding) */
+  --l0: #8b97ab;
+  --l1: #7cc8ff;
+  --l2: #a99bff;
+  --l3: #ffd166;
+  --l4: #ff9f5a;
+  --l5: #ff6b6b;
+  --l6: #4fd6a0;
+  --l7: #ff7ad9;
+  --good: #4fd6a0;
+  --bad: #ff6b6b;
+
+  /* type */
+  --font-display: "Chakra Petch", "Noto Sans SC", "PingFang SC", sans-serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Sarasa Mono SC", ui-monospace, Menlo, Consolas, monospace;
+  --fs-2xs: 12px;
+  --fs-xs: 13px;
+  --fs-sm: 14px;
+  --fs-base: 15px;
+  --fs-body: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: clamp(26px, 3.4vw, 36px);
+  --fs-hero: clamp(42px, 6.4vw, 72px);
+
+  /* space, radius, motion */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px; --sp-9: 96px;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-pill: 999px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --dur: .28s;
+  --lift: translateY(-2px);
+
+  --toc-w: 272px;
+  color-scheme: dark;
+}
+
+/* ---------- base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background-color: var(--void);
+  background-image:
+    radial-gradient(900px 520px at 85% -8%, rgba(255, 179, 71, .09), transparent 60%),
+    radial-gradient(800px 600px at -10% 20%, rgba(124, 200, 255, .06), transparent 60%),
+    linear-gradient(rgba(124, 200, 255, .04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(124, 200, 255, .04) 1px, transparent 1px);
+  background-size: auto, auto, 40px 40px, 40px 40px;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: 1.8;
+  text-rendering: optimizeLegibility;
+}
+::selection { background: rgba(255, 179, 71, .35); color: #fff; }
+a { color: var(--ice); text-decoration: none; }
+:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; border-radius: 4px; }
+p, li { max-width: 70ch; }
+strong { color: #fff; font-weight: 700; }
+code {
+  font-family: var(--font-mono);
+  font-size: .86em;
+  padding: .1em .42em;
+  border-radius: 5px;
+  background: rgba(124, 200, 255, .1);
+  color: #cfe9ff;
+  border: 1px solid rgba(124, 200, 255, .16);
+  overflow-wrap: anywhere;
+}
+
+.sr-only {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip {
+  position: fixed; left: var(--sp-4); top: -60px; z-index: 100;
+  padding: var(--sp-2) var(--sp-4); border-radius: var(--r-sm);
+  background: var(--amber); color: #0a0d14; font-weight: 700;
+  transition: top var(--dur) var(--ease);
+}
+.skip:focus { top: var(--sp-4); }
+
+/* ---------- progress ---------- */
+.progress { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 60; background: rgba(255, 255, 255, .04); }
+.progress span {
+  display: block; height: 100%; width: 0;
+  background: linear-gradient(90deg, var(--l1), var(--l2), var(--l3), var(--l4), var(--l5), var(--l6), var(--l7));
+  box-shadow: 0 0 12px rgba(255, 179, 71, .45);
+}
+
+/* ---------- shell & TOC ---------- */
+.shell { display: grid; grid-template-columns: var(--toc-w) minmax(0, 1fr); }
+.toc {
+  position: sticky; top: 0; height: 100vh; height: 100dvh; overflow-y: auto;
+  padding: var(--sp-6) var(--sp-4) var(--sp-5) var(--sp-5);
+  border-right: 1px solid var(--rule);
+  background: linear-gradient(180deg, rgba(17, 23, 35, .94), rgba(10, 13, 20, .94));
+  display: flex; flex-direction: column; gap: var(--sp-5);
+  scrollbar-width: thin; scrollbar-color: var(--rule) transparent;
+}
+.brand { display: flex; flex-direction: column; gap: 2px; }
+.brand-mark { font-family: var(--font-display); font-weight: 700; letter-spacing: .14em; font-size: var(--fs-xs); color: var(--amber); }
+.brand-name { font-weight: 900; font-size: var(--fs-lg); line-height: 1.4; }
+.toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.toc a {
+  position: relative; display: flex; align-items: center; gap: 10px; min-height: 36px;
+  padding: 6px 10px; border-radius: var(--r-sm);
+  color: var(--dim); font-size: var(--fs-sm); line-height: 1.4;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.toc a .n { font-family: var(--font-display); font-size: var(--fs-2xs); color: var(--faint); min-width: 18px; }
+.toc a.active { color: var(--ink); background: rgba(255, 179, 71, .09); }
+.toc a.active .n { color: var(--amber); }
+.toc a.active::before { content: ""; position: absolute; left: -10px; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--amber); }
+.toc .sub { padding-left: 28px; margin: 2px 0 var(--sp-2); }
+.toc .sub a { font-family: var(--font-mono); font-size: var(--fs-xs); min-height: 32px; padding: 4px 10px; gap: 9px; }
+.toc .sub a i { width: 7px; height: 7px; border-radius: 50%; background: var(--c); box-shadow: 0 0 8px var(--c); flex: none; }
+.toc .sub a.active::before { display: none; }
+.toc .sub a.active { background: color-mix(in srgb, var(--c) 14%, transparent); }
+.toc-meta { margin-top: auto; font-size: var(--fs-2xs); color: var(--faint); line-height: 1.7; border-top: 1px dashed var(--rule); padding-top: var(--sp-3); }
+.toc-meta b { color: var(--dim); font-weight: 500; font-family: var(--font-display); letter-spacing: .06em; }
+
+.topbar, .scrim { display: none; }
+
+/* ---------- layout ---------- */
+main { min-width: 0; padding: var(--sp-8) clamp(20px, 5vw, 64px) var(--sp-9); }
+.col { max-width: 920px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--sp-9); }
+section[id], article[id] { scroll-margin-top: var(--sp-5); }
+.sec-body { display: flex; flex-direction: column; gap: var(--sp-5); }
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); align-items: start; }
+
+@keyframes rise { from { opacity: .25; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise .8s var(--ease) both; animation-delay: var(--d, 0s); }
+@keyframes grow { from { transform: scaleX(.12); } to { transform: scaleX(1); } }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 179, 71, .45); } 60% { box-shadow: 0 0 0 8px rgba(255, 179, 71, 0); } }
+@keyframes flow { to { stroke-dashoffset: -42; } }
+
+/* ---------- hero ---------- */
+.hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: var(--sp-7); align-items: center; }
+.eyebrow { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-2xs); letter-spacing: .18em; text-transform: uppercase; color: var(--amber); }
+.hero h1 { margin: var(--sp-3) 0 0; font-weight: 900; line-height: 1.08; letter-spacing: .01em; font-size: var(--fs-hero); text-wrap: balance; }
+.hero h1 .accent { background: linear-gradient(90deg, var(--amber), #ffd9a0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero h1 small { display: block; margin-top: var(--sp-3); font-size: .38em; font-weight: 500; color: var(--dim); letter-spacing: .06em; }
+.lead { margin: var(--sp-5) 0 0; color: #c3ccdb; font-size: var(--fs-lg); line-height: 1.75; }
+.stats { margin: var(--sp-6) 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
+.stat { padding: var(--sp-3) var(--sp-4); border: 1px solid var(--rule); border-radius: var(--r-md); background: rgba(17, 23, 35, .72); transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.stat b { display: block; font-family: var(--font-display); font-size: 26px; font-weight: 700; line-height: 1.15; color: #fff; font-variant-numeric: tabular-nums; }
+.stat span { display: block; margin-top: var(--sp-1); font-size: var(--fs-xs); color: var(--dim); line-height: 1.4; }
+
+.ladder { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.ladder li {
+  --step: 0; max-width: none;
+  margin-left: calc(var(--step) * 22px);
+  display: grid; grid-template-columns: 46px minmax(0, 1fr);
+  border: 1px solid var(--rule); border-radius: var(--r-md); overflow: hidden;
+  background: rgba(17, 23, 35, .8);
+  transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.ladder .lv { display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: var(--fs-base); color: #0a0d14; background: var(--c); }
+.ladder .tx { padding: var(--sp-2) var(--sp-3); line-height: 1.45; }
+.ladder .tx b { font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: 600; color: var(--c); }
+.ladder .tx em { font-style: normal; font-size: var(--fs-2xs); color: var(--faint); margin-left: 6px; }
+.ladder .tx span { display: block; font-size: var(--fs-xs); color: #c3ccdb; }
+.ladder-cap { margin: var(--sp-3) 0 0; font-size: var(--fs-xs); color: var(--faint); }
+
+/* ---------- section heads ---------- */
+.sec-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--sp-4); align-items: end; margin-bottom: var(--sp-6); }
+.sec-no { font-family: var(--font-display); font-weight: 700; font-size: clamp(56px, 8vw, 88px); line-height: .8; color: transparent; -webkit-text-stroke: 1.5px rgba(255, 179, 71, .75); }
+.sec-head h2 { margin: 6px 0 0; font-size: var(--fs-2xl); font-weight: 900; line-height: 1.25; text-wrap: balance; }
+.sec-head .sub { margin: var(--sp-2) 0 0; color: var(--dim); font-size: var(--fs-base); }
+.blk-title { margin: var(--sp-2) 0 0; font-size: var(--fs-xl); font-weight: 700; line-height: 1.35; display: flex; align-items: center; gap: var(--sp-3); }
+.blk-title::before { content: ""; width: 18px; height: 2px; background: var(--amber); flex: none; }
+
+/* ---------- shared surfaces ---------- */
+.calib { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
+.calib-card {
+  padding: var(--sp-4) var(--sp-5); border-radius: var(--r-lg); background: var(--panel); border: 1px solid var(--rule);
+  display: flex; flex-direction: column; gap: var(--sp-2);
+  transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.tag { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-2xs); letter-spacing: .14em; color: var(--amber); }
+.calib-card .myth { margin: 0; color: var(--faint); text-decoration: line-through; text-decoration-color: rgba(255, 107, 107, .65); font-size: var(--fs-sm); }
+.calib-card .fact { margin: 0; font-size: var(--fs-sm); line-height: 1.75; }
+
+.fig { margin: 0; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--rule); background: var(--panel); transition: border-color var(--dur) var(--ease); }
+.fig figcaption {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px var(--sp-4); align-items: baseline;
+  padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--rule); background: rgba(255, 255, 255, .02);
+  font-size: var(--fs-xs); color: var(--dim);
+}
+.fig figcaption b { font-family: var(--font-display); font-weight: 600; letter-spacing: .1em; color: var(--ink); font-size: var(--fs-xs); }
+.fig-body { padding: var(--sp-5); overflow-x: auto; }
+.fig-foot { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); align-items: center; padding: var(--sp-3) var(--sp-4); border-top: 1px solid var(--rule); font-size: var(--fs-2xs); color: var(--faint); }
+.fig-foot .ln { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.fig-foot .ln::before { content: ""; width: 26px; height: 0; border-top: 2px solid var(--dim); }
+.fig-foot .ln.dash::before { border-top-style: dashed; }
+
+pre.mermaid { margin: 0; min-height: 280px; text-align: center; background: transparent; font-family: var(--font-mono); font-size: var(--fs-2xs); color: #4f5d77; white-space: pre; }
+pre.mermaid svg { max-width: 100%; height: auto; }
+.fig-wrap { display: grid; justify-items: center; gap: var(--sp-4); }
+.fig-wrap pre.mermaid { min-height: 0; width: 100%; }
+.fig-wrap pre.mermaid svg { display: block; margin: 0 auto; }
+#quadChart svg { display: block; margin: 0 auto; }
+#pieChart .legend { display: none; }
+.fig-key.compact { width: auto; grid-template-columns: repeat(2, auto); justify-content: center; gap: 4px var(--sp-6); }
+.fig-key.compact li { grid-template-columns: 12px auto; }
+.fig-key.compact span { font-family: var(--font-mono); }
+.fig-key { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 4px var(--sp-4); font-size: var(--fs-xs); }
+.fig-key li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2); min-height: 26px; }
+.fig-key i { width: 12px; height: 12px; border-radius: 3px; background: var(--c); }
+.fig-key span { color: #c3ccdb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fig-key b { font-family: var(--font-display); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); }
+.no-mermaid pre.mermaid { text-align: left; color: var(--dim); min-height: 0; }
+
+/* ---------- dependency map (FIG.01) ---------- */
+.depmap {
+  position: relative; display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "pre pre" "mg mg" "nn nn" "bpe ng" "skip lc" "nc nc" "ar ar";
+  column-gap: 28px; row-gap: 56px; padding: var(--sp-1);
+}
+.dep-edges { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 0; }
+.dep-edges .e { fill: none; stroke-width: 2; stroke-linecap: round; transition: opacity var(--dur) var(--ease); }
+.dep-edges .e.dash { stroke-dasharray: 6 6; }
+.dep-edges .sig { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 19; opacity: .55; animation: flow 1.8s linear infinite; transition: opacity var(--dur); }
+.dn {
+  position: relative; z-index: 2; display: flex; flex-direction: column; gap: 2px;
+  padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--c) 8%, #131a27);
+  border: 1px solid color-mix(in srgb, var(--c) 42%, var(--rule));
+  color: var(--ink); line-height: 1.45;
+  transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+.dn::before { content: ""; position: absolute; left: 12px; right: 12px; top: -1px; height: 2px; border-radius: 2px; background: var(--c); box-shadow: 0 0 12px var(--c); }
+a.dn::after { content: ""; position: absolute; right: 10px; top: 10px; width: 13px; height: 13px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.8 11.2 11 5M6.2 5H11v4.8' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.8 11.2 11 5M6.2 5H11v4.8' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; color: var(--faint); transition: color var(--dur), transform var(--dur) var(--ease); }
+.dn.span { justify-self: center; width: min(72%, 400px); }
+.dn[data-node="bpe"] { justify-self: end; width: min(100%, 300px); }
+.dn[data-node="ng"] { justify-self: start; width: min(100%, 300px); }
+.dn[data-node="lc"] { justify-self: end; width: min(76%, 280px); border-style: dashed; }
+.dn[data-node="pre"] { border-style: dashed; background: rgba(17, 23, 35, .9); }
+.dn-tag { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-2xs); letter-spacing: .12em; color: var(--c); text-transform: uppercase; }
+.dn-name { font-family: var(--font-mono); font-weight: 600; font-size: var(--fs-base); color: #fff; }
+.dn-desc { font-size: var(--fs-xs); color: var(--dim); }
+.dn-need { display: inline-flex; align-items: center; min-height: 20px; line-height: 1.2; align-self: flex-start; margin-top: 6px; padding: 0 var(--sp-2); border: 1px dashed var(--rule-2); border-radius: var(--r-pill); font-size: var(--fs-2xs); color: var(--faint); }
+.dn-need .short { display: none; }
+.dn-badge { display: inline-flex; align-items: center; min-height: 20px; line-height: 1.2; margin-left: 8px; font-family: var(--font-body); padding: 0 7px; border-radius: var(--r-pill); border: 1px solid var(--c); color: var(--c); font-size: 11px; letter-spacing: .04em; vertical-align: 1px; }
+.dep-label {
+  position: absolute; z-index: 1; transform: translate(-50%, -50%);
+  padding: 1px var(--sp-2); border-radius: var(--r-pill); white-space: nowrap;
+  background: #0d121b; border: 1px solid var(--rule-2); color: var(--dim);
+  font-size: var(--fs-2xs); line-height: 1.6; pointer-events: none;
+  transition: opacity var(--dur) var(--ease), color var(--dur), border-color var(--dur);
+}
+.dep-label.v { writing-mode: vertical-rl; padding: var(--sp-2) 1px; letter-spacing: .12em; }
+.depmap.is-focus .e:not(.on), .depmap.is-focus .sig:not(.on) { opacity: .12; }
+.depmap.is-focus .dn:not(.on) { opacity: .45; }
+.depmap.is-focus .dep-label:not(.on) { opacity: .25; }
+.depmap.is-focus .dep-label.on { color: var(--ink); border-color: var(--amber); }
+
+/* ---------- tables ---------- */
+.tbl { overflow-x: auto; border: 1px solid var(--rule); border-radius: var(--r-lg); background: var(--panel); }
+table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); line-height: 1.65; }
+thead th { text-align: left; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-2xs); letter-spacing: .08em; color: var(--amber); background: var(--panel-2); padding: var(--sp-3) var(--sp-4); white-space: nowrap; border-bottom: 1px solid var(--rule); }
+tbody td { padding: var(--sp-3) var(--sp-4); vertical-align: top; border-bottom: 1px solid rgba(36, 48, 73, .7); font-variant-numeric: tabular-nums; }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr { transition: background var(--dur); }
+td.proj { font-family: var(--font-mono); font-weight: 600; white-space: nowrap; color: var(--c, var(--ink)); }
+td.stars { white-space: nowrap; letter-spacing: .1em; color: var(--amber); }
+.tbl.sticky-first td:first-child, .tbl.sticky-first th:first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); }
+.tbl.sticky-first th:first-child { background: var(--panel-2); }
+.tbl.sticky-first td:first-child { box-shadow: 1px 0 0 var(--rule); }
+tbody th[scope="row"] { text-align: left; vertical-align: top; padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid rgba(36, 48, 73, .7); font-weight: 700; color: var(--dim); white-space: nowrap; }
+tbody tr:last-child th[scope="row"] { border-bottom: 0; }
+.tbl.sticky-first tbody th:first-child { background: var(--panel); box-shadow: 1px 0 0 var(--rule); }
+.compare td, .compare thead th { min-width: 132px; }
+.compare tbody th { min-width: 96px; }
+.compare thead th { color: var(--ink); font-family: var(--font-mono); letter-spacing: 0; }
+.compare th .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c); margin-right: 6px; box-shadow: 0 0 8px var(--c); }
+.lvl { display: inline-flex; align-items: center; min-height: 26px; padding: 0 10px; line-height: 1.2; white-space: nowrap; border-radius: var(--r-pill); font-size: var(--fs-2xs); border: 1px solid var(--c); color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); }
+.m {
+  display: inline-block; width: 66px; height: 9px; vertical-align: middle; border-radius: 2px;
+  background: linear-gradient(90deg, var(--c) 0 calc(var(--v) * 20%), #26324a calc(var(--v) * 20%) 100%);
+  -webkit-mask: repeating-linear-gradient(90deg, #000 0 11.2px, transparent 11.2px 13.2px);
+          mask: repeating-linear-gradient(90deg, #000 0 11.2px, transparent 11.2px 13.2px);
+}
+.skills td { white-space: nowrap; }
+.heat td.h { text-align: center; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-base); }
+.heat td.h small { display: block; font-family: var(--font-body); font-weight: 400; font-size: var(--fs-2xs); opacity: .85; }
+.h1 { background: #12304a; color: #9fd4ff; }
+.h2 { background: #123a30; color: #86ebc0; }
+.h3 { background: #3d3414; color: #ffe08a; }
+.h4 { background: #4a2c16; color: #ffbe8a; }
+.h5 { background: #4f1c24; color: #ffa3aa; }
+.heat td.total { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .18); }
+.legend { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; font-size: var(--fs-xs); color: var(--dim); }
+.legend i { display: inline-grid; place-items: center; width: 26px; height: 20px; border-radius: 4px; font-style: normal; font-family: var(--font-display); font-size: var(--fs-2xs); }
+
+/* ---------- terminal blocks ---------- */
+.term { border-radius: var(--r-md); overflow: hidden; border: 1px solid #1f2a3f; background: #070a10; }
+.term-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); background: #0d121c; border-bottom: 1px solid #1a2335; font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--faint); }
+.term-bar .lbl::before { content: "▍"; color: var(--c, var(--amber)); margin-right: 6px; }
+.copy { min-height: 28px; font: 500 var(--fs-2xs) var(--font-body); color: var(--dim); background: transparent; cursor: pointer; border: 1px solid #26324a; border-radius: 6px; padding: 2px 10px; transition: color var(--dur), border-color var(--dur), background var(--dur); }
+.copy.ok { color: var(--good); border-color: var(--good); }
+.term pre { margin: 0; padding: var(--sp-4); overflow-x: auto; font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.6; color: #cdd7e6; }
+.term pre .c { color: #7a88a3; }
+.term pre .k { color: var(--l2); }
+.term pre .f { color: var(--l1); }
+.term pre .hl { color: var(--amber); }
+
+/* ---------- module cards ---------- */
+.mods { display: flex; flex-direction: column; gap: var(--sp-6); }
+.mod { position: relative; border-radius: var(--r-lg); background: var(--panel); border: 1px solid var(--rule); overflow: hidden; transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.mod::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--c); box-shadow: 0 0 18px var(--c); }
+.mod-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px var(--sp-5); align-items: start; padding: var(--sp-5) var(--sp-5) var(--sp-4); background: linear-gradient(135deg, color-mix(in srgb, var(--c) 10%, transparent), transparent 55%); border-bottom: 1px solid var(--rule); }
+.mod-idx { font-family: var(--font-display); font-weight: 700; font-size: 46px; line-height: 1; color: var(--c); }
+.mod-layer { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-2xs); letter-spacing: .14em; color: var(--c); text-transform: uppercase; }
+.mod-head h3 { margin: 2px 0 0; font-family: var(--font-mono); font-size: 26px; font-weight: 600; line-height: 1.25; }
+.mod-tag { margin: var(--sp-1) 0 0; color: #c3ccdb; font-size: var(--fs-base); }
+.specs { grid-column: 1 / -1; margin: var(--sp-3) 0 0; display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.specs div { display: flex; gap: var(--sp-2); align-items: baseline; padding: var(--sp-1) var(--sp-3); border-radius: var(--r-sm); background: rgba(0, 0, 0, .25); border: 1px solid var(--rule); font-size: var(--fs-xs); }
+.specs dt { color: var(--faint); font-family: var(--font-display); letter-spacing: .08em; font-size: var(--fs-2xs); }
+.specs dd { margin: 0; }
+.mod-body { padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-5); }
+.blk h4 { margin: 0 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-3); font-size: var(--fs-body); font-weight: 700; }
+.blk h4 .k { display: inline-flex; align-items: center; min-height: 26px; line-height: 1.2; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-2xs); letter-spacing: .14em; color: var(--c); padding: 0 var(--sp-2); border: 1px solid color-mix(in srgb, var(--c) 50%, transparent); border-radius: var(--r-pill); }
+.blk ol, .blk ul { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
+.blk ol li::marker { font-family: var(--font-display); color: var(--c); font-weight: 700; }
+.blk ul li::marker { color: var(--c); }
+.blk li { font-size: var(--fs-base); }
+.split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
+.split .blk { padding: var(--sp-4); border-radius: var(--r-md); background: rgba(0, 0, 0, .2); border: 1px solid var(--rule); }
+.split .blk li { font-size: var(--fs-sm); }
+.side { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: var(--sp-5); align-items: start; }
+
+/* nanochat pipeline */
+.pipe { display: flex; flex-direction: column; gap: var(--sp-3); }
+.pipe-row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--sp-4); align-items: center; }
+.pipe-row .tag { color: var(--c); line-height: 1.4; }
+.pipe-row .tag small { display: block; font-family: var(--font-body); font-weight: 500; letter-spacing: .04em; font-size: var(--fs-xs); color: var(--dim); text-transform: none; }
+.pipe-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+.pipe-steps li { position: relative; max-width: none; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); background: color-mix(in srgb, var(--c) 7%, var(--panel-2)); border: 1px solid color-mix(in srgb, var(--c) 38%, var(--rule)); line-height: 1.45; }
+.pipe-steps li.opt { border-style: dashed; }
+.pipe-steps li:not(:last-child)::after { content: "→"; position: absolute; right: -18px; top: 50%; transform: translateY(-50%); color: var(--c); font-size: var(--fs-sm); font-weight: 700; }
+.pipe-steps .no { display: block; font-family: var(--font-display); font-weight: 700; font-size: var(--fs-2xs); color: var(--c); }
+.pipe-steps b { display: block; font-family: var(--font-mono); font-weight: 600; font-size: var(--fs-xs); color: #fff; }
+.pipe-steps span:last-child { display: block; font-size: var(--fs-2xs); color: var(--dim); }
+.pipe-join { margin: 0 0 0 112px; font-size: var(--fs-2xs); color: var(--faint); }
+
+/* autoresearch cycle */
+.cycle { display: flex; flex-direction: column; gap: var(--sp-2); }
+.cy-human { padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); border: 1px solid color-mix(in srgb, var(--l3) 45%, var(--rule)); background: color-mix(in srgb, var(--l3) 8%, var(--panel-2)); font-size: var(--fs-sm); }
+.cy-human .tag { color: var(--l3); margin-right: var(--sp-2); }
+.cy-down { margin: 0; padding-left: var(--sp-4); color: var(--faint); font-size: var(--fs-2xs); }
+.cy-wrap { position: relative; }
+.cy-wrap::before { content: ""; position: absolute; right: 8px; top: 22px; bottom: 22px; width: 24px; border: 2px dashed var(--c); border-left: 0; border-radius: 0 var(--r-md) var(--r-md) 0; opacity: .85; }
+.cy-wrap::after { content: ""; position: absolute; right: 32px; top: 16px; border: 6px solid transparent; border-right-color: var(--c); border-left-width: 0; }
+.cy-rate { position: absolute; right: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; padding: var(--sp-2) 2px; background: var(--panel); font-family: var(--font-display); font-weight: 600; font-size: 11px; letter-spacing: .12em; color: var(--c); }
+.cy-loop { list-style: none; margin: 0; padding: 0 44px 0 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.cy-loop li { max-width: none; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: var(--sp-2); align-items: baseline; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-sm); background: var(--panel-2); border: 1px solid color-mix(in srgb, var(--c) 30%, var(--rule)); font-size: var(--fs-sm); line-height: 1.5; }
+.cy-loop .no { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-2xs); color: var(--c); }
+.cy-out { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.cy-out span { padding: 0 var(--sp-2); border-radius: var(--r-pill); font-size: var(--fs-2xs); border: 1px solid; }
+.cy-out .yes { color: var(--good); border-color: color-mix(in srgb, var(--good) 60%, transparent); background: color-mix(in srgb, var(--good) 10%, transparent); }
+.cy-out .no2 { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 60%, transparent); background: color-mix(in srgb, var(--bad) 10%, transparent); }
+
+/* ---------- cost chart ---------- */
+.cost svg { width: 100%; height: auto; display: block; min-width: 560px; }
+.cost .grid line { stroke: #22304a; stroke-dasharray: 3 4; }
+.cost .axis { fill: var(--faint); font: 500 11.5px var(--font-display); }
+.cost .xl { fill: #c9d3e3; font: 600 12px var(--font-display); }
+.cost .xs { fill: var(--faint); font: 400 11px var(--font-body); }
+.cost .val { fill: #fff; font: 700 13px var(--font-display); }
+.cost .line { fill: none; stroke: var(--amber); stroke-width: 2.5; }
+.cost .area { fill: url(#costfill); }
+.cost .pt { fill: var(--void); stroke: var(--amber); stroke-width: 2.5; }
+.cost .range { stroke: var(--l6); stroke-width: 2.5; }
+.cost .rlbl { fill: var(--l6); font: 600 11.5px var(--font-display); }
+.cost .big { fill: var(--amber); font: 700 14px var(--font-display); letter-spacing: .04em; }
+
+/* ---------- star bars ---------- */
+.bars { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-3); }
+.bars li, .bars-axis { display: grid; grid-template-columns: 140px minmax(0, 1fr) 60px; gap: var(--sp-3); align-items: center; max-width: none; }
+.bars .nm { font-family: var(--font-mono); font-size: var(--fs-xs); color: #c3ccdb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bars .tr { height: 16px; border-radius: 4px; background-color: #151d2c; background-image: linear-gradient(90deg, rgba(51, 66, 95, .6) 1px, transparent 1px); background-size: 25% 100%; overflow: hidden; }
+.bars .tr span { display: block; height: 100%; width: calc(var(--v) * 1%); border-radius: 4px; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 55%, transparent), var(--c)); transform-origin: left; animation: grow 1.1s var(--ease) both; animation-delay: var(--d, .1s); }
+.bars .vl { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); text-align: right; font-variant-numeric: tabular-nums; }
+.bars-axis { margin-top: var(--sp-2); }
+.bars-axis .ticks { display: flex; justify-content: space-between; font-family: var(--font-display); font-size: 11px; color: var(--faint); }
+.insights { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-3); }
+.insight { padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); border: 1px solid var(--rule); background: rgba(17, 23, 35, .72); font-size: var(--fs-sm); line-height: 1.7; }
+.insight .tag { display: block; margin-bottom: var(--sp-1); }
+
+/* ---------- gantt ---------- */
+.gantt { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 520px; }
+.g-row { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: var(--sp-4); align-items: center; }
+.g-label { line-height: 1.35; }
+.g-label b { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xs); color: var(--c); margin-right: 6px; }
+.g-label span { font-size: var(--fs-xs); }
+.g-label small { display: block; font-size: var(--fs-2xs); color: var(--faint); }
+.g-track { position: relative; display: grid; grid-template-columns: repeat(17, minmax(0, 1fr)); height: 30px; border-radius: 6px; background-color: rgba(255, 255, 255, .015); background-image: linear-gradient(90deg, rgba(51, 66, 95, .55) 1px, transparent 1px); background-size: calc(100% / 17) 100%; }
+.g-bar { grid-row: 1; grid-column: var(--s) / span var(--n); align-self: center; height: 16px; margin: 0 2px; border-radius: 5px; background: linear-gradient(90deg, color-mix(in srgb, var(--c) 55%, transparent), var(--c)); box-shadow: 0 0 14px -4px var(--c); }
+.g-bar.opt { background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--c) 80%, transparent) 0 6px, color-mix(in srgb, var(--c) 35%, transparent) 6px 12px); }
+.ms-key { display: inline-block; width: 8px; height: 8px; margin: 0 7px 0 3px; transform: rotate(45deg); background: var(--amber); vertical-align: 0.05em; }
+.g-ms { grid-row: 1; grid-column: 17; justify-self: end; align-self: center; width: 12px; height: 12px; margin-right: -6px; transform: rotate(45deg); background: var(--amber); animation: pulse 2.4s ease-out infinite; }
+.g-axis .g-track { height: auto; background: none; }
+.g-axis .g-track span { grid-row: 1; font-family: var(--font-display); font-size: 11px; color: var(--faint); }
+
+/* ---------- roadmap extras ---------- */
+.track { list-style: none; margin: 0; padding: 0 0 0 var(--sp-1); position: relative; display: flex; flex-direction: column; gap: var(--sp-3); }
+.track::before { content: ""; position: absolute; left: 19px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(var(--l1), var(--l2), var(--l3), var(--l4), var(--l5), var(--l6), var(--l7)); opacity: .55; }
+.track li { position: relative; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: var(--sp-3); align-items: start; max-width: none; }
+.track .wk { position: relative; z-index: 1; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--void); border: 2px solid var(--c); color: var(--c); font: 700 var(--fs-2xs) var(--font-display); }
+.track li:last-child .wk { animation: pulse 2.4s ease-out infinite; border-color: var(--amber); color: var(--amber); }
+.track .bd { padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); background: var(--panel); border: 1px solid var(--rule); font-size: var(--fs-sm); transition: border-color var(--dur), transform var(--dur) var(--ease); }
+.track .bd .tag { color: var(--c); margin-right: var(--sp-2); }
+
+.pits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
+.pit { padding: var(--sp-4) var(--sp-5); border-radius: var(--r-lg); background: var(--panel); border: 1px solid var(--rule); border-top: 3px solid var(--c); transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.pit h4 { margin: 0 0 var(--sp-3); display: flex; gap: var(--sp-3); align-items: baseline; font-size: var(--fs-body); }
+.pit h4 .tag { color: var(--c); }
+.pit ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.pit li { position: relative; padding-left: 24px; font-size: var(--fs-sm); line-height: 1.65; }
+.pit li::before { position: absolute; left: 0; top: 1px; font-weight: 700; font-family: var(--font-display); }
+.pit li.bad::before { content: "✕"; color: var(--bad); }
+.pit li.good::before { content: "✓"; color: var(--good); }
+.pit li.money::before { content: "$"; color: var(--amber); }
+
+.advice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
+.adv { padding: var(--sp-5); border-radius: var(--r-lg); background: var(--panel); border: 1px solid var(--rule); display: flex; flex-direction: column; gap: var(--sp-2); transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.adv .tag { color: var(--c); }
+.adv h3 { margin: 0; font-size: var(--fs-lg); line-height: 1.4; }
+.adv p { margin: 0; font-size: var(--fs-sm); color: #c3ccdb; }
+
+.sources { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+.sources a { display: flex; flex-direction: column; gap: 2px; padding: var(--sp-3) var(--sp-4); border-radius: var(--r-md); background: var(--panel); border: 1px solid var(--rule); color: var(--ink); transition: border-color var(--dur), transform var(--dur) var(--ease); }
+.sources a small { color: var(--faint); font-family: var(--font-mono); font-size: var(--fs-2xs); }
+.sources a span { font-size: var(--fs-sm); }
+.end { margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: 1px dashed var(--rule); font-size: var(--fs-xs); color: var(--faint); }
+
+.i { display: inline-block; width: 1em; height: 1em; flex: none; vertical-align: -0.14em; }
+.totop { position: fixed; right: var(--sp-4); bottom: var(--sp-4); z-index: 40; width: 44px; height: 44px; border-radius: var(--r-md); border: 1px solid var(--rule); background: rgba(17, 23, 35, .92); color: var(--amber); cursor: pointer; display: grid; place-items: center; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity var(--dur), transform var(--dur) var(--ease), border-color var(--dur); }
+.totop .i { width: 18px; height: 18px; }
+.menu-btn .i { width: 16px; height: 16px; }
+.totop.show { opacity: 1; pointer-events: auto; transform: none; }
+
+/* ---------- hover: pointer devices only (no sticky hover on touch) ---------- */
+@media (hover: hover) and (pointer: fine) {
+  .toc a:hover { color: var(--ink); background: rgba(255, 255, 255, .04); }
+  a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .toc a:hover, .dn:hover, .sources a:hover { text-decoration: none; }
+  .stat:hover, .calib-card:hover, .adv:hover, .pit:hover, .sources a:hover { transform: var(--lift); }
+  .stat:hover, .calib-card:hover { border-color: rgba(255, 179, 71, .5); }
+  .adv:hover { border-color: var(--c); }
+  .sources a:hover { border-color: var(--ice); }
+  .ladder li:hover { transform: translateX(6px); border-color: var(--c); box-shadow: 0 0 0 1px var(--c), 0 8px 28px -12px var(--c); }
+  .fig:hover { border-color: var(--rule-2); }
+  .mod:hover { border-color: color-mix(in srgb, var(--c) 45%, var(--rule)); box-shadow: 0 30px 60px -40px var(--c); }
+  tbody tr:hover { background: rgba(124, 200, 255, .05); }
+  .heat td.h:hover { filter: brightness(1.2); }
+  .track .bd:hover { border-color: var(--c); transform: translateX(3px); }
+  .copy:hover { color: var(--ink); border-color: var(--amber); background: rgba(255, 179, 71, .08); }
+  .totop:hover { border-color: var(--amber); }
+  .dn:hover { transform: var(--lift); border-color: var(--c); box-shadow: 0 14px 34px -20px var(--c); }
+  a.dn:hover::after { color: var(--c); transform: translate(2px, -2px); }
+}
+.dn:focus-visible { border-color: var(--c); }
+.hover-only { display: none; }
+@media (hover: hover) and (pointer: fine) { .hover-only { display: inline; } }
+
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  .hero { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 1024px) {
+  .shell { grid-template-columns: 1fr; }
+  .topbar {
+    position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3);
+    padding: var(--sp-2) var(--sp-4); background: rgba(10, 13, 20, .9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule);
+  }
+  .topbar .brand-name { font-size: var(--fs-base); }
+  .menu-btn { display: inline-flex; align-items: center; gap: var(--sp-2); min-height: 40px; padding: 0 var(--sp-3); border-radius: var(--r-sm); cursor: pointer; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); font: 500 var(--fs-sm) var(--font-body); }
+  .toc {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 70; width: min(86vw, 320px); height: 100%;
+    background: #0d121b; transform: translateX(-104%); visibility: hidden;
+    transition: transform .35s var(--ease), visibility 0s linear .35s;
+  }
+  body.toc-open .toc { transform: none; visibility: visible; box-shadow: 30px 0 60px rgba(0, 0, 0, .5); transition: transform .35s var(--ease), visibility 0s; }
+  .scrim { display: block; position: fixed; inset: 0; z-index: 65; background: rgba(0, 0, 0, .55); opacity: 0; pointer-events: none; transition: opacity var(--dur); }
+  body.toc-open .scrim { opacity: 1; pointer-events: auto; }
+  section[id], article[id] { scroll-margin-top: 72px; }
+  main { padding-top: var(--sp-6); }
+}
+@media (max-width: 760px) {
+  :root { --fs-body: 15px; --fs-lg: 17px; --fs-xl: 20px; }
+  .col { gap: 72px; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .calib, .split, .side, .pits, .advice, .grid-2, .sources, .insights { grid-template-columns: 1fr; }
+  .ladder li { margin-left: calc(var(--step) * 8px); }
+  .mod-head { padding: var(--sp-5) var(--sp-4) var(--sp-4); grid-template-columns: 1fr; }
+  .mod-idx { font-size: 34px; }
+  .mod-head h3 { font-size: var(--fs-xl); }
+  .mod-body { padding: var(--sp-4); }
+  .sec-head { grid-template-columns: 1fr; gap: 6px; }
+  .fig-body { padding: var(--sp-4); }
+  .bars li, .bars-axis { grid-template-columns: 118px minmax(0, 1fr) 48px; gap: var(--sp-2); }
+  .bars .nm { font-size: var(--fs-2xs); }
+  .depmap { column-gap: 20px; row-gap: 46px; }
+  .dn { padding: var(--sp-2) var(--sp-3); }
+  .dn-name { font-size: var(--fs-sm); }
+  .dn-desc { font-size: var(--fs-2xs); }
+  .dn-need .full { display: none; }
+  .dn-need .short { display: inline; }
+  .dn[data-node="lc"] { width: min(80%, 280px); }
+  .pipe-row { grid-template-columns: 1fr; gap: var(--sp-2); }
+  .pipe-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+  .pipe-steps li::after { display: none; }
+  .pipe-join { margin-left: 0; }
+  .g-row { grid-template-columns: 112px minmax(0, 1fr); gap: var(--sp-2); }
+  .gantt { min-width: 0; }
+}
+@media (max-width: 420px) {
+  main { padding-left: var(--sp-4); padding-right: var(--sp-4); }
+  .term pre { font-size: var(--fs-2xs); padding: var(--sp-3); }
+  .stat b { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-up" viewBox="0 0 16 16"><path d="M8 13V3.6M3.8 7.6 8 3.4l4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 16 16"><path d="M2.6 4h10.8M2.6 8h10.8M2.6 12h10.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+</svg>
+<a class="skip" href="#overview">跳到正文</a>
+<div class="progress" aria-hidden="true"><span id="bar"></span></div>
+
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">LLM · ZERO → ONE</span><span class="brand-name">大模型可视化学习指南</span></div>
+  <button class="menu-btn" id="menuBtn" type="button" aria-controls="toc" aria-expanded="false"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg>目录</button>
+</header>
+<div class="scrim" id="scrim"></div>
+
+<div class="shell">
+  <aside class="toc" id="toc" aria-label="目录">
+    <div class="brand"><span class="brand-mark">LLM · ZERO → ONE</span><span class="brand-name">大模型可视化学习指南</span></div>
+    <nav aria-label="页面目录">
+      <ol>
+        <li><a href="#overview"><span class="n">00</span>一页速览</a></li>
+        <li><a href="#graph"><span class="n">01</span>技能雷达与图谱</a></li>
+        <li><a href="#modules"><span class="n">02</span>核心模块拆解</a>
+          <ol class="sub">
+            <li><a href="#m-micrograd" style="--c: var(--l1)"><i></i>micrograd</a></li>
+            <li><a href="#m-nn" style="--c: var(--l2)"><i></i>nn-zero-to-hero</a></li>
+            <li><a href="#m-minbpe" style="--c: var(--l3)"><i></i>minbpe</a></li>
+            <li><a href="#m-nanogpt" style="--c: var(--l4)"><i></i>nanoGPT</a></li>
+            <li><a href="#m-llmc" style="--c: var(--l5)"><i></i>llm.c</a></li>
+            <li><a href="#m-nanochat" style="--c: var(--l6)"><i></i>nanochat</a></li>
+            <li><a href="#m-autoresearch" style="--c: var(--l7)"><i></i>autoresearch</a></li>
+          </ol>
+        </li>
+        <li><a href="#compare"><span class="n">03</span>多维对比表</a></li>
+        <li><a href="#dashboard"><span class="n">04</span>可视化看板</a></li>
+        <li><a href="#roadmap"><span class="n">05</span>学习路线与避坑</a></li>
+        <li><a href="#advice"><span class="n">06</span>方向建议</a></li>
+        <li><a href="#sources"><span class="n">07</span>来源</a></li>
+      </ol>
+    </nav>
+    <div class="toc-meta"><b>DATA</b> 核对于 2026-11-02<br>Star 取自 GitHub 仓库页<br>耗时与难度为经验估计</div>
+  </aside>
+
+  <main id="main">
+    <div class="col">
+
+      <!-- ============ 00 OVERVIEW ============ -->
+      <section id="overview" tabindex="-1">
+        <div class="hero">
+          <div>
+            <p class="eyebrow rise">Karpathy · Zero to Hero · 7 Repos</p>
+            <h1 class="rise" style="--d:.06s">大模型<span class="accent">从零到一</span><small>可视化学习手册</small></h1>
+            <p class="lead rise" style="--d:.12s">从 100 行的反向传播引擎出发，一路走到能通宵替你做训练实验的 Agent。七个开源仓库对应七级抽象阶梯：每上一级，你都会亲手造出一个能运行的东西。</p>
+            <div class="stats rise" style="--d:.18s">
+              <div class="stat"><b>7</b><span>个开源仓库</span></div>
+              <div class="stat"><b>307.8k</b><span>GitHub Star 合计</span></div>
+              <div class="stat"><b>≈200h</b><span>标准路线 · 17 周</span></div>
+              <div class="stat"><b>$75–175</b><span>全程 GPU 预算</span></div>
+            </div>
+          </div>
+          <div class="rise" style="--d:.24s">
+            <ol class="ladder" aria-label="抽象阶梯，从 L7 智能体到 L1 数学">
+              <li style="--c: var(--l7); --step: 6"><span class="lv">L7</span><div class="tx"><b>autoresearch</b><em>智能体</em><span>让 Coding Agent 通宵替你做实验</span></div></li>
+              <li style="--c: var(--l6); --step: 5"><span class="lv">L6</span><div class="tx"><b>nanochat</b><em>产品</em><span>从分词器到 Web UI 的端到端聊天模型</span></div></li>
+              <li style="--c: var(--l5); --step: 4"><span class="lv">L5</span><div class="tx"><b>llm.c</b><em>底层</em><span>不依赖 PyTorch 的 C/CUDA GPT-2 训练器</span></div></li>
+              <li style="--c: var(--l4); --step: 3"><span class="lv">L4</span><div class="tx"><b>nanoGPT</b><em>训练</em><span>可复现 GPT-2 的训练 / 微调循环</span></div></li>
+              <li style="--c: var(--l3); --step: 2"><span class="lv">L3</span><div class="tx"><b>minbpe</b><em>Token</em><span>与 GPT-4 同款输出的 BPE 分词器</span></div></li>
+              <li style="--c: var(--l2); --step: 1"><span class="lv">L2</span><div class="tx"><b>nn-zero-to-hero</b><em>模型</em><span>bigram → MLP → WaveNet → Transformer</span></div></li>
+              <li style="--c: var(--l1); --step: 0"><span class="lv">L1</span><div class="tx"><b>micrograd</b><em>数学</em><span>约 100 行的标量反向传播引擎</span></div></li>
+            </ol>
+            <p class="ladder-cap">越往上，抽象越高、系统越完整；越往下，越接近第一性原理。</p>
+          </div>
+        </div>
+
+        <div class="sec-body" style="margin-top: var(--sp-8)">
+          <h2 class="blk-title">素材中需要校准的 4 处事实</h2>
+          <div class="calib">
+            <div class="calib-card">
+              <span class="tag">FACT CHECK #1</span>
+              <p class="myth">成本从 4.3 万美元降到 48 美元</p>
+              <p class="fact"><strong>$43K</strong> 是 OpenAI 2019 年训练原版 GPT-2（1.5B）的估算成本（32 片 TPU v3，约一周）；<strong>$48</strong> 是 nanochat 2026 版在 8×H100 上约 2 小时达到 GPT-2 CORE 分数的按需价（spot 约 $15）。2025-10 首发的“$100 / 4 小时”档模型尚未达到 GPT-2 水平。</p>
+            </div>
+            <div class="calib-card">
+              <span class="tag">FACT CHECK #2</span>
+              <p class="myth">线性路径 nanoGPT → llm.c → nanochat</p>
+              <p class="fact"><strong>llm.c 不是 nanochat 的硬前置。</strong>nanochat 仍基于 PyTorch；llm.c 是向下钻的系统分支，适合想理解性能与底层的人，属于选修。</p>
+            </div>
+            <div class="calib-card">
+              <span class="tag">FACT CHECK #3</span>
+              <p class="myth">nanoGPT 是训练 GPT 的首选</p>
+              <p class="fact">nanoGPT README 自 <strong>2025-11</strong> 起已标注过时，作者建议改用 nanochat。它仍是最好读的教材，但不再是实践首选。</p>
+            </div>
+            <div class="calib-card">
+              <span class="tag">FACT CHECK #4</span>
+              <p class="myth">前三个项目是三个独立阶段</p>
+              <p class="fact">micrograd 是课程<strong>第 1 讲</strong>，nanoGPT 对应<strong>第 7 讲</strong>，minbpe 对应<strong>第 8 讲</strong>：它们是“视频课 + 配套仓库”交织的关系。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 01 GRAPH ============ -->
+      <section id="graph">
+        <header class="sec-head">
+          <span class="sec-no" aria-hidden="true">01</span>
+          <div><p class="eyebrow">Skill Graph</p><h2>技能雷达与图谱架构</h2><p class="sub">从上到下是推荐的学习顺序；颜色对应抽象层级。</p></div>
+        </header>
+        <div class="sec-body">
+          <figure class="fig">
+            <figcaption><b>FIG.01 · 项目依赖图谱</b><span><span class="hover-only">悬停查看依赖链 · </span>点击节点跳到对应模块</span></figcaption>
+            <div class="fig-body">
+              <div class="depmap" id="depmap" aria-describedby="depmap-desc">
+                <svg class="dep-edges" aria-hidden="true"></svg>
+                <div class="dn" data-node="pre" style="grid-area: pre; --c: var(--l0)">
+                  <span class="dn-tag">L0 · 前置基础</span>
+                  <span class="dn-desc">Python · 链式法则 · 矩阵乘法 · 概率与交叉熵</span>
+                </div>
+                <a class="dn span" data-node="mg" href="#m-micrograd" style="grid-area: mg; --c: var(--l1)">
+                  <span class="dn-tag">L1 · 数学</span><span class="dn-name">micrograd</span><span class="dn-desc">标量自动微分</span>
+                </a>
+                <a class="dn span" data-node="nn" href="#m-nn" style="grid-area: nn; --c: var(--l2)">
+                  <span class="dn-tag">L2 · 模型</span><span class="dn-name">nn-zero-to-hero</span><span class="dn-desc">makemore 1–5 → GPT · 共 8 讲</span>
+                </a>
+                <a class="dn" data-node="bpe" href="#m-minbpe" style="grid-area: bpe; --c: var(--l3)">
+                  <span class="dn-tag">L3 · Token</span><span class="dn-name">minbpe</span><span class="dn-desc">BPE 分词器</span>
+                </a>
+                <a class="dn" data-node="ng" href="#m-nanogpt" style="grid-area: ng; --c: var(--l4)">
+                  <span class="dn-tag">L4 · 训练</span><span class="dn-name">nanoGPT</span><span class="dn-desc">GPT-2 训练 / 微调</span>
+                </a>
+                <a class="dn" data-node="lc" href="#m-llmc" style="grid-area: lc; --c: var(--l5)">
+                  <span class="dn-tag">L5 · 底层</span><span class="dn-name">llm.c<span class="dn-badge">选修</span></span><span class="dn-desc">纯 C/CUDA 训练</span><span class="dn-need"><span class="full">需 C · CUDA · Make</span><span class="short">需 C/CUDA</span></span>
+                </a>
+                <a class="dn span" data-node="nc" href="#m-nanochat" style="grid-area: nc; --c: var(--l6)">
+                  <span class="dn-tag">L6 · 产品</span><span class="dn-name">nanochat</span><span class="dn-desc">端到端聊天模型</span><span class="dn-need"><span class="full">需 云 GPU · uv · torchrun</span><span class="short">需 云 GPU</span></span>
+                </a>
+                <a class="dn span" data-node="ar" href="#m-autoresearch" style="grid-area: ar; --c: var(--l7)">
+                  <span class="dn-tag">L7 · 智能体</span><span class="dn-name">autoresearch</span><span class="dn-desc">自动实验 Agent</span><span class="dn-need"><span class="full">需 Claude Code / Codex 等 Coding Agent</span><span class="short">需 Coding Agent</span></span>
+                </a>
+              </div>
+              <p class="sr-only" id="depmap-desc">依赖关系：前置基础到 micrograd，再到 nn-zero-to-hero。nn-zero-to-hero 第 8 讲引出 minbpe，第 7 讲引出 nanoGPT。minbpe 与 nanoGPT 共同通向 nanochat。llm.c 是从 nanoGPT 分出的选修分支，为 nanochat 提供性能直觉。nanochat 精简为单卡单文件后得到 autoresearch，autoresearch 的实验成果又回流到 nanochat 排行榜。</p>
+            </div>
+            <div class="fig-foot"><span class="ln">强依赖 · 建议按序</span><span class="ln dash">选修分支 · 反哺</span><span>主线可跳过 L5，直达 nanochat</span></div>
+          </figure>
+
+          <h3 class="blk-title">前置知识与心智门槛</h3>
+          <div class="tbl sticky-first">
+            <table>
+              <thead><tr><th scope="col">项目</th><th scope="col">硬前置（必须）</th><th scope="col">软前置（有更好）</th><th scope="col">最难跨过的那道坎</th><th scope="col">门槛</th></tr></thead>
+              <tbody>
+                <tr style="--c: var(--l1)"><td class="proj">micrograd</td><td>Python 类与运算符重载；导数、链式法则</td><td>递归、拓扑排序</td><td>理解“梯度 = 局部导数 × 上游梯度”，且必须<strong>累加</strong>而非覆盖</td><td class="stars" aria-label="1 星">★☆☆☆☆</td></tr>
+                <tr style="--c: var(--l2)"><td class="proj">nn-zero-to-hero</td><td>micrograd；张量与广播思维</td><td>概率、最大似然估计</td><td>第 5 讲不调用 <code>.backward()</code>，手推交叉熵与 BatchNorm 的梯度</td><td class="stars" aria-label="3 星">★★★☆☆</td></tr>
+                <tr style="--c: var(--l3)"><td class="proj">minbpe</td><td>Python 字符串与 <code>bytes</code>；UTF-8</td><td>正则表达式</td><td>“字节 ≠ 字符”；编码时按 merge <strong>先后顺序</strong>而非当前频次合并</td><td class="stars" aria-label="2 星">★★☆☆☆</td></tr>
+                <tr style="--c: var(--l4)"><td class="proj">nanoGPT</td><td>Transformer 结构；<code>nn.Module</code></td><td>DDP、混合精度</td><td>从“能跑”到“能复现”：学习率调度、梯度累积、读懂 loss 曲线</td><td class="stars" aria-label="3 星">★★★☆☆</td></tr>
+                <tr style="--c: var(--l5)"><td class="proj">llm.c</td><td>C 指针与内存布局；每层前向 / 反向公式</td><td>CUDA 线程模型、cuBLAS</td><td>没有 autograd：每个算子的反向都要自己写对，并逐层与 PyTorch 对齐</td><td class="stars" aria-label="5 星">★★★★★</td></tr>
+                <tr style="--c: var(--l6)"><td class="proj">nanochat</td><td>nanoGPT 全部内容 + 分词</td><td>分布式训练、评测基准、云 GPU 运维</td><td>全流程系统观：预训练 → 对话微调 → RL → 评测 → 推理服务，并接受“算力即预算”</td><td class="stars" aria-label="4 星">★★★★☆</td></tr>
+                <tr style="--c: var(--l7)"><td class="proj">autoresearch</td><td>nanochat 训练核心；git</td><td>Coding Agent 经验、实验设计</td><td>从“写代码”转向“写研究指令”（<code>program.md</code>），并分辨改进是信号还是噪声</td><td class="stars" aria-label="3 星">★★★☆☆</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="blk-title">技能雷达</h3>
+          <div class="grid-2">
+            <figure class="fig">
+              <figcaption><b>FIG.02 · 四个关键阶段</b><span>0–5 分，经验评估</span></figcaption>
+              <div class="fig-body fig-wrap">
+<pre class="mermaid" id="radarChart" aria-label="技能雷达图">
+radar-beta
+  axis m["数学推导"], p["PyTorch"], s["C/CUDA"], g["GPU/分布式"], d["数据与评测"], a["Agent 工程"]
+  graticule polygon
+  ticks 5
+  curve c2["nanoGPT"]{3, 4, 1, 3, 3, 0}
+  curve c3["llm.c"]{4, 1, 5, 5, 2, 0}
+  curve c4["nanochat"]{3, 5, 2, 4, 5, 1}
+  curve c5["autoresearch"]{2, 4, 1, 3, 3, 5}
+  max 5
+  min 0
+</pre>
+                <ul class="fig-key compact" aria-label="图例">
+                  <li style="--c: var(--l4)"><i></i><span>nanoGPT</span></li>
+                  <li style="--c: var(--l5)"><i></i><span>llm.c</span></li>
+                  <li style="--c: var(--l6)"><i></i><span>nanochat</span></li>
+                  <li style="--c: var(--l7)"><i></i><span>autoresearch</span></li>
+                </ul>
+              </div>
+            </figure>
+            <div class="tbl sticky-first skills">
+              <table>
+                <thead><tr><th scope="col">项目</th><th scope="col">数学</th><th scope="col">PyTorch</th><th scope="col">C/CUDA</th><th scope="col">GPU</th><th scope="col">数据评测</th><th scope="col">Agent</th></tr></thead>
+                <tbody>
+                  <tr style="--c: var(--l1)"><td class="proj">micrograd</td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:2" title="2/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td></tr>
+                  <tr style="--c: var(--l2)"><td class="proj">nn-zero-to-hero</td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:2" title="2/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td></tr>
+                  <tr style="--c: var(--l3)"><td class="proj">minbpe</td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td></tr>
+                  <tr style="--c: var(--l4)"><td class="proj">nanoGPT</td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td></tr>
+                  <tr style="--c: var(--l5)"><td class="proj">llm.c</td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:5" title="5/5"></i></td><td><i class="m" style="--v:5" title="5/5"></i></td><td><i class="m" style="--v:2" title="2/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td></tr>
+                  <tr style="--c: var(--l6)"><td class="proj">nanochat</td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:5" title="5/5"></i></td><td><i class="m" style="--v:2" title="2/5"></i></td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:5" title="5/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td></tr>
+                  <tr style="--c: var(--l7)"><td class="proj">autoresearch</td><td><i class="m" style="--v:2" title="2/5"></i></td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:5" title="5/5"></i></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 02 MODULES ============ -->
+      <section id="modules">
+        <header class="sec-head">
+          <span class="sec-no" aria-hidden="true">02</span>
+          <div><p class="eyebrow">Module Teardown</p><h2>核心模块拆解</h2><p class="sub">每张卡片：核心机制 · 工程亮点 · 关键产出。</p></div>
+        </header>
+        <div class="mods">
+
+          <article class="mod" id="m-micrograd" style="--c: var(--l1)">
+            <header class="mod-head">
+              <span class="mod-idx" aria-hidden="true">01</span>
+              <div>
+                <p class="mod-layer">L1 · 数学层</p>
+                <h3>micrograd</h3>
+                <p class="mod-tag">反向传播的“原子”：把自动微分压缩进一个标量 <code>Value</code> 类</p>
+              </div>
+              <dl class="specs">
+                <div><dt>LANG</dt><dd>Python · 零依赖</dd></div>
+                <div><dt>SIZE</dt><dd>引擎 ~100 行 + nn ~50 行</dd></div>
+                <div><dt>STARS</dt><dd>18.2k</dd></div>
+              </dl>
+            </header>
+            <div class="mod-body">
+              <div class="blk">
+                <h4><span class="k">MECHANISM</span>核心机制</h4>
+                <ol>
+                  <li>每个 <code>Value</code> 保存 <code>data</code>、<code>grad</code>、父节点 <code>_prev</code> 和闭包 <code>_backward</code>；每次运算都动态生成新节点，组成一张有向无环计算图。</li>
+                  <li><code>loss.backward()</code> 先做拓扑排序，再逆序遍历，对每个节点应用链式法则：<code>父.grad += 局部导数 × 子.grad</code>。</li>
+                  <li>用 <code>+=</code> 累加正是多元链式法则：同一变量在图中被多处使用时，各路梯度要求和。</li>
+                  <li>神经元 = Σwᵢxᵢ + b 再过非线性；<code>Layer</code>、<code>MLP</code> 只是 <code>Value</code> 的组合；训练 = 前向 → 清零 → 反向 → <code>p.data -= lr * p.grad</code>。</li>
+                  <li>PyTorch autograd 原理相同，只是把标量换成张量、把 Python 闭包换成高效 kernel。</li>
+                </ol>
+              </div>
+              <div class="grid-2">
+                <div class="term">
+                  <div class="term-bar"><span class="lbl">ascii · 链式法则</span><button class="copy" type="button" aria-label="复制链式法则示意">复制</button></div>
+<pre>前向:  a ──┐
+           (×)── c ──┐
+       b ──┘         (+)── e ──[tanh]── L
+                d ───┘
+
+反向:  ∂L/∂a = ∂L/∂c · b      <span class="c"># 局部导数 × 上游梯度</span>
+       ∂L/∂d = ∂L/∂e · 1      <span class="c"># 加法节点原样分发梯度</span></pre>
+                </div>
+                <div class="term">
+                  <div class="term-bar"><span class="lbl">python · backward()</span><button class="copy" type="button" aria-label="复制 backward 代码">复制</button></div>
+<pre><span class="k">def</span> <span class="f">backward</span>(self):
+    order, seen = [], <span class="f">set</span>()
+    <span class="k">def</span> <span class="f">visit</span>(v):
+        <span class="k">if</span> v <span class="k">not in</span> seen:
+            seen.add(v)
+            <span class="k">for</span> parent <span class="k">in</span> v._prev:
+                visit(parent)
+            order.append(v)
+    visit(self)
+    self.grad = <span class="hl">1.0</span>
+    <span class="k">for</span> v <span class="k">in</span> <span class="f">reversed</span>(order):
+        v._backward()</pre>
+                </div>
+              </div>
+              <div class="split">
+                <div class="blk">
+                  <h4><span class="k">HIGHLIGHTS</span>工程亮点</h4>
+                  <ul>
+                    <li>运算符重载让 <code>1 + v</code>、<code>10.0 / v</code>、<code>v ** 2</code> 全部可微</li>
+                    <li><code>trace_graph.ipynb</code> 用 Graphviz 画出计算图，节点同时显示 data 与 grad</li>
+                    <li>可用 PyTorch 作参考答案做对拍单元测试</li>
+                  </ul>
+                </div>
+                <div class="blk">
+                  <h4><span class="k">OUTPUT</span>关键产出</h4>
+                  <ul>
+                    <li>自己从零写出的 <code>Value</code> 类，通过有限差分梯度检查</li>
+                    <li><code>demo.ipynb</code>：两层隐藏层（各 16 个神经元）的 MLP 在 moon 数据集上二分类，SVM max-margin loss + SGD，画出决策边界</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="mod" id="m-nn" style="--c: var(--l2)">
+            <header class="mod-head">
+              <span class="mod-idx" aria-hidden="true">02</span>
+              <div>
+                <p class="mod-layer">L2 · 模型层</p>
+                <h3>nn-zero-to-hero</h3>
+                <p class="mod-tag">8 讲视频课配套讲义：从单神经元走到 GPT 和分词器</p>
+              </div>
+              <dl class="specs">
+                <div><dt>LANG</dt><dd>Python + PyTorch · Jupyter</dd></div>
+                <div><dt>SIZE</dt><dd>8 讲 · 课程持续更新</dd></div>
+                <div><dt>STARS</dt><dd>25.0k</dd></div>
+              </dl>
+            </header>
+            <div class="mod-body">
+              <div class="side">
+                <div class="blk">
+                  <h4><span class="k">MECHANISM</span>核心机制</h4>
+                  <ol>
+                    <li>语言建模 = 给定上下文预测下一个 token 的概率分布，用负对数似然（交叉熵）衡量；bigram 计数表就是最朴素的模型。</li>
+                    <li>MLP（Bengio 2003 思路）引入嵌入表与隐藏层，把离散字符映射到连续空间以获得泛化。</li>
+                    <li>第 4–5 讲聚焦训练动力学：初始化尺度（27 个字符时初始 loss 应 ≈ ln 27 ≈ 3.30）、tanh 饱和、Kaiming 初始化、BatchNorm，以及手推反向传播。</li>
+                    <li>WaveNet 讲引入层级式融合；GPT 讲实现 <code>softmax(QKᵀ/√dₖ)V</code> + 因果掩码 + 残差 + LayerNorm + 多头。</li>
+                    <li>最后一讲回到输入端：分词器是 LLM 许多怪癖的根源。</li>
+                  </ol>
+                </div>
+                <div class="tbl">
+                  <table>
+                    <thead><tr><th scope="col">#</th><th scope="col">主题</th><th scope="col">新增零件</th></tr></thead>
+                    <tbody>
+                      <tr><td>1</td><td>micrograd</td><td>自动微分、MLP</td></tr>
+                      <tr><td>2</td><td>makemore 1：bigram</td><td>NLL、采样</td></tr>
+                      <tr><td>3</td><td>makemore 2：MLP</td><td>嵌入、数据划分</td></tr>
+                      <tr><td>4</td><td>makemore 3：激活与梯度</td><td>初始化、BatchNorm</td></tr>
+                      <tr><td>5</td><td>makemore 4：Backprop Ninja</td><td>手写反向</td></tr>
+                      <tr><td>6</td><td>makemore 5：WaveNet</td><td>层级结构</td></tr>
+                      <tr><td>7</td><td>Let's build GPT</td><td>自注意力</td></tr>
+                      <tr><td>8</td><td>GPT Tokenizer</td><td>BPE</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="split">
+                <div class="blk">
+                  <h4><span class="k">HIGHLIGHTS</span>工程亮点</h4>
+                  <ul>
+                    <li>每讲代码随视频逐行写出，notebook 可直接复现</li>
+                    <li>“Backprop Ninja”附 Colab 练习，是整套课程投入产出比最高的一讲</li>
+                    <li>逐步重新发明 <code>torch.nn</code>，学完 PyTorch 不再是黑盒</li>
+                  </ul>
+                </div>
+                <div class="blk">
+                  <h4><span class="k">OUTPUT</span>关键产出</h4>
+                  <ul>
+                    <li>makemore：能编造新英文名字的字符级生成模型</li>
+                    <li>在 tiny Shakespeare 上训练、能生成伪莎士比亚文本的小 GPT</li>
+                    <li>训练诊断工具：激活 / 梯度直方图、更新量与参数量之比</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="mod" id="m-minbpe" style="--c: var(--l3)">
+            <header class="mod-head">
+              <span class="mod-idx" aria-hidden="true">03</span>
+              <div>
+                <p class="mod-layer">L3 · Token 层</p>
+                <h3>minbpe</h3>
+                <p class="mod-tag">极简字节级 BPE，复现 GPT-4 分词器的输出</p>
+              </div>
+              <dl class="specs">
+                <div><dt>LANG</dt><dd>Python · regex</dd></div>
+                <div><dt>SIZE</dt><dd>3 个分词器类 + 基类</dd></div>
+                <div><dt>STARS</dt><dd>10.9k</dd></div>
+              </dl>
+            </header>
+            <div class="mod-body">
+              <div class="side">
+                <div class="blk">
+                  <h4><span class="k">MECHANISM</span>核心机制</h4>
+                  <ol>
+                    <li>从 UTF-8 字节出发（256 个基础 token），统计相邻对的频次，把最高频的一对合并为新 id 并记录规则；重复 <code>vocab_size − 256</code> 次。</li>
+                    <li>编码时按 merge 的<strong>先后顺序</strong>（rank 最小者优先）反复合并；解码就是把 id 映射回字节串、拼接后按 UTF-8 解码。</li>
+                    <li><code>RegexTokenizer</code> 先用正则把文本切成字母 / 数字 / 标点块，块内再做 BPE，避免 <code>dog.</code> 与 <code>dog!</code> 学出不同合并。</li>
+                    <li>特殊 token 不参与 BPE，需显式注册，并通过 <code>allowed_special</code> 防止用户输入注入。</li>
+                  </ol>
+                </div>
+                <div class="term">
+                  <div class="term-bar"><span class="lbl">ascii · BPE 训练</span><button class="copy" type="button" aria-label="复制 BPE 训练示意">复制</button></div>
+<pre>aaabdaaabac
+
+① "aa" → Z   ZabdZabac
+② "ab" → Y   ZYdZYac
+③ "ZY" → X   XdXac
+
+<span class="c"># 词表 = 原始符号 + {Z, Y, X}</span></pre>
+                </div>
+              </div>
+              <div class="split">
+                <div class="blk">
+                  <h4><span class="k">HIGHLIGHTS</span>工程亮点</h4>
+                  <ul>
+                    <li>三级递进：<code>BasicTokenizer</code> → <code>RegexTokenizer</code> → <code>GPT4Tokenizer</code></li>
+                    <li><code>GPT4Tokenizer</code> 输出与 tiktoken <code>cl100k_base</code> 一致</li>
+                    <li>在 <code>taylorswift.txt</code> 上训练，M1 MacBook 约 25 秒</li>
+                    <li><code>exercise.md</code> 提供分步练习；社区有 Rust 版 <code>minbpe-rs</code></li>
+                  </ul>
+                </div>
+                <div class="blk">
+                  <h4><span class="k">OUTPUT</span>关键产出</h4>
+                  <ul>
+                    <li>自己训练的 <code>.model</code>（可加载）与 <code>.vocab</code>（可阅读）</li>
+                    <li>亲手验证：为什么中文、代码、数字往往更“费 token”</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="mod" id="m-nanogpt" style="--c: var(--l4)">
+            <header class="mod-head">
+              <span class="mod-idx" aria-hidden="true">04</span>
+              <div>
+                <p class="mod-layer">L4 · 训练层</p>
+                <h3>nanoGPT</h3>
+                <p class="mod-tag">最易读的 GPT-2 训练 / 微调实现（README 自 2025-11 起标注过时）</p>
+              </div>
+              <dl class="specs">
+                <div><dt>LANG</dt><dd>Python + PyTorch</dd></div>
+                <div><dt>SIZE</dt><dd>train.py ~300 + model.py ~300 行</dd></div>
+                <div><dt>STARS</dt><dd>64.2k</dd></div>
+              </dl>
+            </header>
+            <div class="mod-body">
+              <div class="blk">
+                <h4><span class="k">MECHANISM</span>核心机制</h4>
+                <ol>
+                  <li>Decoder-only Transformer：token 嵌入 + 位置嵌入 → N 个 Pre-LN Block（因果自注意力、4 倍宽 MLP + GELU，均带残差）→ 最终 LN → <code>lm_head</code>（与 token 嵌入共享权重）。</li>
+                  <li>目标函数是每个位置的下一 token 交叉熵；生成时自回归采样，配合 temperature 与 top-k。</li>
+                  <li>训练循环集成 AdamW、warmup + cosine 衰减、梯度累积、梯度裁剪、混合精度、<code>torch.compile</code> 与 DDP。</li>
+                  <li>注意力走 PyTorch <code>scaled_dot_product_attention</code>（Flash Attention 路径）；可直接加载 OpenAI GPT-2 权重微调。</li>
+                </ol>
+              </div>
+              <div class="term">
+                <div class="term-bar"><span class="lbl">ascii · GPT forward</span><button class="copy" type="button" aria-label="复制 GPT 前向示意">复制</button></div>
+<pre>idx ─► [wte + wpe] ─► ┌─────────── Block × N ───────────┐ ─► LN_f ─► lm_head ─► logits
+                      │ x = x + Attn(LN(x))   # causal   │                ▲
+                      │ x = x + MLP(LN(x))    # 4x GELU  │                │ tied
+                      └──────────────────────────────────┘               wte</pre>
+              </div>
+              <div class="split">
+                <div class="blk">
+                  <h4><span class="k">HIGHLIGHTS</span>工程亮点</h4>
+                  <ul>
+                    <li>shakespeare_char：6 层 / 6 头 / 384 维，单张 A100 约 3 分钟，验证 loss 1.4697；CPU 缩小版约 3 分钟到 ~1.88</li>
+                    <li>复现 GPT-2 124M：8×A100 40GB 约 4 天，OpenWebText 上 loss ≈ 2.85</li>
+                    <li>配置就是 Python 文件，命令行参数直接覆盖全局变量</li>
+                  </ul>
+                </div>
+                <div class="blk">
+                  <h4><span class="k">OUTPUT</span>关键产出</h4>
+                  <ul>
+                    <li>字符级莎士比亚生成器：第一次看到自己训练的 GPT 开口</li>
+                    <li>基于 GPT-2 预训练权重微调出的莎士比亚风模型</li>
+                    <li>（进阶）完整复现 GPT-2 124M 的 loss 曲线</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="mod" id="m-llmc" style="--c: var(--l5)">
+            <header class="mod-head">
+              <span class="mod-idx" aria-hidden="true">05</span>
+              <div>
+                <p class="mod-layer">L5 · 底层（选修）</p>
+                <h3>llm.c</h3>
+                <p class="mod-tag">去掉 245MB 的 PyTorch 和 107MB 的 cPython，用纯 C/CUDA 训练 GPT-2</p>
+              </div>
+              <dl class="specs">
+                <div><dt>LANG</dt><dd>C · CUDA · cuDNN / NCCL 可选</dd></div>
+                <div><dt>SIZE</dt><dd>CPU 版 ~1,000 行；CUDA 主线 2024 年中约 4–5K 行</dd></div>
+                <div><dt>STARS</dt><dd>31.2k</dd></div>
+              </dl>
+            </header>
+            <div class="mod-body">
+              <div class="blk">
+                <h4><span class="k">MECHANISM</span>核心机制</h4>
+                <ol>
+                  <li>没有 autograd：encoder、layernorm、matmul、attention、GELU、residual、softmax + 交叉熵，每层的 forward 和 backward 都是手写函数，反向按层逆序显式调用。</li>
+                  <li>参数、梯度、激活、AdamW 状态在启动时一次性分配为连续内存，再用指针切片定位：训练全程内存恒定、零动态分配。</li>
+                  <li>GPU 主线加入自写 CUDA kernel、cuBLAS/cuBLASLt、可选 cuDNN Flash Attention、bf16 混合精度、ZeRO-1 优化器分片与 NCCL/MPI 多卡多节点。</li>
+                  <li>正确性靠对拍：<code>test_gpt2</code> 读取 PyTorch 参考实现导出的 debug state，逐项比较 logits、loss 与梯度。</li>
+                </ol>
+              </div>
+              <div class="term">
+                <div class="term-bar"><span class="lbl">ascii · 内存布局</span><button class="copy" type="button" aria-label="复制内存布局示意">复制</button></div>
+<pre><span class="c"># params：一次 malloc 得到的连续内存，用指针切片</span>
+┌─────┬─────┬──────┬──────┬──────┬──────┬──────────┬─────┬──────┬──────┐
+│ wte │ wpe │ ln1w │ ln1b │ qkvw │ qkvb │ attprojw │ ... │ lnfw │ lnfb │
+└─────┴─────┴──────┴──────┴──────┴──────┴──────────┴─────┴──────┴──────┘
+grads   ← 同样布局再来一份
+m, v    ← AdamW 一阶 / 二阶矩
+acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ probs │ losses</pre>
+              </div>
+              <div class="tbl">
+                <table>
+                  <thead><tr><th scope="col">里程碑</th><th scope="col">硬件</th><th scope="col">时长</th><th scope="col">成本</th><th scope="col">效率</th></tr></thead>
+                  <tbody>
+                    <tr><td>2024-05 复现 GPT-2 124M</td><td>8×A100 80GB</td><td>~90 分钟</td><td>~$20</td><td>MFU 最高约 60%</td></tr>
+                    <tr><td>2024-07 复现 GPT-2 1.6B（1558M）</td><td>8×H100</td><td>~24 小时</td><td>$672</td><td>MFU 约 50%</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="split">
+                <div class="blk">
+                  <h4><span class="k">HIGHLIGHTS</span>工程亮点</h4>
+                  <ul>
+                    <li>README 称比 PyTorch Nightly 快约 7%</li>
+                    <li><code>dev/cuda/</code> 保留同一算子的多个 kernel 版本，可逐个对比学习</li>
+                    <li>可读性优先：复杂度不值得的性能 PR 会被拒绝</li>
+                  </ul>
+                </div>
+                <div class="blk">
+                  <h4><span class="k">OUTPUT</span>关键产出</h4>
+                  <ul>
+                    <li>在笔记本 CPU 上用 C 加载 GPT-2 124M 并微调（starter pack）</li>
+                    <li><code>test_gpt2</code> 全部通过：C 实现与 PyTorch 数值对齐</li>
+                    <li>（进阶）在云 GPU 上从零训练 GPT-2 124M</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="mod" id="m-nanochat" style="--c: var(--l6)">
+            <header class="mod-head">
+              <span class="mod-idx" aria-hidden="true">06</span>
+              <div>
+                <p class="mod-layer">L6 · 产品层</p>
+                <h3>nanochat</h3>
+                <p class="mod-tag">“$100 能买到的最好的 ChatGPT”：单仓库端到端流水线</p>
+              </div>
+              <dl class="specs">
+                <div><dt>LANG</dt><dd>Python + PyTorch · Rust 分词器 · uv</dd></div>
+                <div><dt>SIZE</dt><dd>2025-10 首发约 8,000 行</dd></div>
+                <div><dt>STARS</dt><dd>59.5k</dd></div>
+              </dl>
+            </header>
+            <div class="mod-body">
+              <div class="blk">
+                <h4><span class="k">MECHANISM</span>核心机制</h4>
+                <ol>
+                  <li>一条 <code>speedrun.sh</code> 跑完全流程：训练分词器 → 在高质量网页语料（如 FineWeb-Edu）上预训练 → 对话格式 SFT（对话特殊 token 与工具调用）→ 可选 RL（GSM8K）→ 评测 → KV cache 推理引擎 → CLI / Web 聊天。</li>
+                  <li>只暴露一个旋钮 <code>--depth</code>：宽度、头数、学习率、训练时长、权重衰减按 scaling law 自动推导。d12 ≈ GPT-1 规模，d24–d26 ≈ GPT-2 能力。</li>
+                  <li>优化器为 Muon（矩阵参数）+ AdamW（嵌入等）；评测以 DCLM CORE 为主线（GPT-2 基准 0.256525），辅以 ARC、MMLU、GSM8K、HumanEval。</li>
+                  <li>Time-to-GPT-2 排行榜把研究变成竞速：在 8×H100 上把超过 GPT-2 CORE 所需的墙钟时间越压越短。</li>
+                </ol>
+              </div>
+              <figure class="fig">
+                <figcaption><b>FIG.03 · speedrun 流水线</b><span>编号即执行顺序</span></figcaption>
+                <div class="fig-body">
+                  <div class="pipe">
+                    <div class="pipe-row">
+                      <span class="tag">TRAIN<small>训练</small></span>
+                      <ol class="pipe-steps">
+                        <li><span class="no">01</span><b>tok_train</b><span>Rust BPE 分词器</span></li>
+                        <li><span class="no">02</span><b>base_train</b><span>预训练 · --depth</span></li>
+                        <li><span class="no">03</span><b>chat_sft</b><span>对话 / 工具调用</span></li>
+                        <li class="opt"><span class="no">04 · 可选</span><b>chat_rl</b><span>GSM8K 强化学习</span></li>
+                      </ol>
+                    </div>
+                    <p class="pipe-join">↳ 训练完成后进入评测与服务</p>
+                    <div class="pipe-row">
+                      <span class="tag">SERVE<small>评测与服务</small></span>
+                      <ol class="pipe-steps">
+                        <li><span class="no">05</span><b>eval</b><span>CORE · ARC · MMLU</span></li>
+                        <li><span class="no">06</span><b>Engine</b><span>KV cache 推理</span></li>
+                        <li><span class="no">07</span><b>chat_cli / web</b><span>命令行与 Web UI</span></li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              </figure>
+              <div class="tbl">
+                <table>
+                  <thead><tr><th scope="col">时间</th><th scope="col">达到 GPT-2 能力的方案</th><th scope="col">硬件</th><th scope="col">墙钟</th><th scope="col">成本</th></tr></thead>
+                  <tbody>
+                    <tr><td>2019</td><td>OpenAI 原版 GPT-2（1.5B）</td><td>32× TPU v3</td><td>~168 h</td><td>≈ $43,000</td></tr>
+                    <tr><td>2024-07</td><td>llm.c GPT-2 1.6B</td><td>8×H100</td><td>24 h</td><td>$672</td></tr>
+                    <tr><td>2025-10</td><td>nanochat 首发 ~12h 档</td><td>8×H100</td><td>~12 h</td><td>≈ $300</td></tr>
+                    <tr><td>2026-01</td><td>nanochat d24 基线（CORE 0.2585）</td><td>8×H100</td><td>3.04 h</td><td>≈ $73</td></tr>
+                    <tr><td>2026-03</td><td>排行榜纪录“autoresearch round 2”（CORE 0.2626）</td><td>8×H100</td><td>1.65 h</td><td>≈ $40</td></tr>
+                    <tr><td>现 README</td><td>按 ~2 h、~$24/h 估算</td><td>8×H100</td><td>~2 h</td><td><strong>≈ $48</strong>（spot ≈ $15）</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="split">
+                <div class="blk">
+                  <h4><span class="k">HIGHLIGHTS</span>工程亮点</h4>
+                  <ul>
+                    <li>单 GPU 也能跑：去掉 <code>torchrun</code> 即可，约慢 8 倍</li>
+                    <li>CPU / Apple Silicon 有缩小版示例脚本</li>
+                    <li>训练结束生成 <code>report.md</code> 成绩单，所有指标一页看完</li>
+                  </ul>
+                </div>
+                <div class="blk">
+                  <h4><span class="k">OUTPUT</span>关键产出</h4>
+                  <ul>
+                    <li>能写小故事和诗、回答简单问题的聊天模型（约“幼儿园小朋友”水平）</li>
+                    <li><code>report.md</code>：分词器压缩率、CORE、ARC、MMLU、GSM8K 等</li>
+                    <li>你自己的 Time-to-GPT-2 实验记录</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="mod" id="m-autoresearch" style="--c: var(--l7)">
+            <header class="mod-head">
+              <span class="mod-idx" aria-hidden="true">07</span>
+              <div>
+                <p class="mod-layer">L7 · 智能体层</p>
+                <h3>autoresearch</h3>
+                <p class="mod-tag">让 Coding Agent 通宵替你做 LLM 训练实验：单卡、单文件、单指标</p>
+              </div>
+              <dl class="specs">
+                <div><dt>LANG</dt><dd>Python + Markdown · 外接 Coding Agent</dd></div>
+                <div><dt>SIZE</dt><dd>train.py ~630 行 + prepare.py + program.md</dd></div>
+                <div><dt>STARS</dt><dd>98.8k · 2026-03 发布</dd></div>
+              </dl>
+            </header>
+            <div class="mod-body">
+              <div class="side">
+                <div class="blk">
+                  <h4><span class="k">MECHANISM</span>核心机制</h4>
+                  <ol>
+                    <li>三个关键文件：<code>prepare.py</code>（数据、BPE、dataloader 与评测，Agent 不可改）、<code>train.py</code>（模型 + Muon/AdamW + 训练循环，Agent 唯一可改）、<code>program.md</code>（人写的研究指令）。</li>
+                    <li>循环：读指令 → 改 <code>train.py</code> → 固定 5 分钟训练 → 算 <code>val_bpb</code> → 变好就 git 提交，变差就回滚 → 记录 → 下一轮。</li>
+                    <li><code>val_bpb</code> = 验证集总交叉熵（nats）÷（ln 2 × 总字节数），与词表大小无关；固定时间预算把“更快”和“更好”折算进同一个分数。</li>
+                    <li>本质是以 LLM 为变异算子的贪心爬山：人定义搜索空间与先验，Agent 负责高频试错。</li>
+                  </ol>
+                </div>
+                <figure class="fig">
+                  <figcaption><b>FIG.04 · 实验循环</b><span>约 12 次 / 小时</span></figcaption>
+                  <div class="fig-body">
+                    <div class="cycle">
+                      <div class="cy-human"><span class="tag">HUMAN</span>编写 <code>program.md</code></div>
+                      <p class="cy-down" aria-hidden="true">↓ 交给 Agent</p>
+                      <div class="cy-wrap">
+                        <ol class="cy-loop" aria-label="Agent 循环步骤，第 06 步后回到第 01 步">
+                          <li><span class="no">01</span><span>阅读指令与实验历史</span></li>
+                          <li><span class="no">02</span><span>修改 <code>train.py</code></span></li>
+                          <li><span class="no">03</span><span>训练 5 分钟（固定墙钟预算）</span></li>
+                          <li><span class="no">04</span><span>计算 <code>val_bpb</code></span></li>
+                          <li><span class="no">05</span><span>优于当前最优？<span class="cy-out"><span class="yes">是 · git commit 保留</span><span class="no2">否 · 回滚改动</span></span></span></li>
+                          <li><span class="no">06</span><span>记录日志，回到 01</span></li>
+                        </ol>
+                        <span class="cy-rate" aria-hidden="true">LOOP · ~100 次 / 夜</span>
+                      </div>
+                    </div>
+                  </div>
+                </figure>
+              </div>
+              <div class="split">
+                <div class="blk">
+                  <h4><span class="k">HIGHLIGHTS</span>工程亮点</h4>
+                  <ul>
+                    <li>约每小时 12 次实验，一夜约 100 次</li>
+                    <li>Karpathy 在 d12 nanochat 上连跑约 2 天、约 700 次实验，找到约 20 条可叠加改进，并迁移到 d24</li>
+                    <li>nanochat 排行榜 1.65 h 纪录即标注为“autoresearch round 2”</li>
+                    <li>仅支持 NVIDIA 单卡（H100 测试）；macOS、Windows、AMD 有社区 fork</li>
+                  </ul>
+                </div>
+                <div class="blk">
+                  <h4><span class="k">OUTPUT</span>关键产出</h4>
+                  <ul>
+                    <li>一晚的实验日志 + git 历史：每条被保留的改动及其 <code>val_bpb</code> 增益</li>
+                    <li>你自己迭代出的 <code>program.md</code>：在这个范式里，Agent 写的代码是一次性的，研究指令才是会复利的资产</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+      <!-- ============ 03 COMPARE ============ -->
+      <section id="compare">
+        <header class="sec-head">
+          <span class="sec-no" aria-hidden="true">03</span>
+          <div><p class="eyebrow">Side by Side</p><h2>多维对比表</h2><p class="sub">窄屏可横向滑动，首列固定。成本按约 $3 / GPU·小时估算。</p></div>
+        </header>
+        <div class="tbl sticky-first compare">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">维度</th>
+                <th scope="col" style="--c: var(--l1)"><span class="dot"></span>micrograd</th>
+                <th scope="col" style="--c: var(--l2)"><span class="dot"></span>nn-zero-to-hero</th>
+                <th scope="col" style="--c: var(--l3)"><span class="dot"></span>minbpe</th>
+                <th scope="col" style="--c: var(--l4)"><span class="dot"></span>nanoGPT</th>
+                <th scope="col" style="--c: var(--l5)"><span class="dot"></span>llm.c</th>
+                <th scope="col" style="--c: var(--l6)"><span class="dot"></span>nanochat</th>
+                <th scope="col" style="--c: var(--l7)"><span class="dot"></span>autoresearch</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">代码量级</th><td>~150 行</td><td>8 讲 notebooks</td><td>数百行</td><td>~600 行核心</td><td>~1K 行（CPU）/ 数千行（CUDA）</td><td>~8K 行</td><td>~630 行 + 指令文件</td></tr>
+              <tr><th scope="row">编程语言</th><td>Python</td><td>Python + PyTorch</td><td>Python</td><td>Python + PyTorch</td><td>C / CUDA</td><td>Python + PyTorch + Rust</td><td>Python + Markdown</td></tr>
+              <tr><th scope="row">硬件要求</th><td>任意 CPU</td><td>CPU 可，GPU / Colab 更佳</td><td>任意 CPU</td><td>CPU 可演示；复现 124M 需 8×A100</td><td>CPU 可演示；复现需 NVIDIA 多卡</td><td>8×H100 跑 speedrun；单卡慢 ~8×</td><td>单张 NVIDIA GPU（H100 测试）</td></tr>
+              <tr><th scope="row">抽象层级</th><td><span class="lvl" style="--c: var(--l1)">数学</span></td><td><span class="lvl" style="--c: var(--l2)">模型</span></td><td><span class="lvl" style="--c: var(--l3)">Token</span></td><td><span class="lvl" style="--c: var(--l4)">训练</span></td><td><span class="lvl" style="--c: var(--l5)">底层</span></td><td><span class="lvl" style="--c: var(--l6)">产品</span></td><td><span class="lvl" style="--c: var(--l7)">智能体</span></td></tr>
+              <tr><th scope="row">最小成本</th><td>$0</td><td>$0</td><td>$0</td><td>$0</td><td>$0（CPU）/ ~$20（124M）</td><td>几美元（d12）/ ~$48（d24）</td><td>~$25 一夜 + Agent API</td></tr>
+              <tr><th scope="row">实操门槛</th><td class="stars" aria-label="1 星">★☆☆☆☆</td><td class="stars" aria-label="3 星">★★★☆☆</td><td class="stars" aria-label="2 星">★★☆☆☆</td><td class="stars" aria-label="3 星">★★★☆☆</td><td class="stars" aria-label="5 星">★★★★★</td><td class="stars" aria-label="4 星">★★★★☆</td><td class="stars" aria-label="3 星">★★★☆☆</td></tr>
+              <tr><th scope="row">推荐耗时</th><td>8–12 h</td><td>40–60 h</td><td>8–12 h</td><td>15–25 h</td><td>40–80 h</td><td>25–40 h</td><td>10–20 h + 通宵运行</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ============ 04 DASHBOARD ============ -->
+      <section id="dashboard">
+        <header class="sec-head">
+          <span class="sec-no" aria-hidden="true">04</span>
+          <div><p class="eyebrow">Dashboard</p><h2>可视化看板</h2><p class="sub">Star 数核对于 2026-11-02；耗时与难度为经验估计。</p></div>
+        </header>
+        <div class="sec-body">
+          <h3 class="blk-title">GitHub Star 对比</h3>
+          <figure class="fig">
+            <figcaption><b>FIG.05 · Star 数（千）</b><span>按层级着色 · 合计 307.8k</span></figcaption>
+            <div class="fig-body">
+              <ul class="bars">
+                <li style="--c: var(--l7); --v: 98.8; --d: .05s"><span class="nm">autoresearch</span><span class="tr"><span></span></span><span class="vl">98.8k</span></li>
+                <li style="--c: var(--l4); --v: 64.2; --d: .12s"><span class="nm">nanoGPT</span><span class="tr"><span></span></span><span class="vl">64.2k</span></li>
+                <li style="--c: var(--l6); --v: 59.5; --d: .19s"><span class="nm">nanochat</span><span class="tr"><span></span></span><span class="vl">59.5k</span></li>
+                <li style="--c: var(--l5); --v: 31.2; --d: .26s"><span class="nm">llm.c</span><span class="tr"><span></span></span><span class="vl">31.2k</span></li>
+                <li style="--c: var(--l2); --v: 25.0; --d: .33s"><span class="nm">nn-zero-to-hero</span><span class="tr"><span></span></span><span class="vl">25.0k</span></li>
+                <li style="--c: var(--l1); --v: 18.2; --d: .40s"><span class="nm">micrograd</span><span class="tr"><span></span></span><span class="vl">18.2k</span></li>
+                <li style="--c: var(--l3); --v: 10.9; --d: .47s"><span class="nm">minbpe</span><span class="tr"><span></span></span><span class="vl">10.9k</span></li>
+              </ul>
+              <div class="bars-axis" aria-hidden="true"><span></span><span class="ticks"><span>0</span><span>25k</span><span>50k</span><span>75k</span><span>100k</span></span><span></span></div>
+            </div>
+          </figure>
+          <div class="insights">
+            <div class="insight"><span class="tag">NEWEST, BIGGEST</span>最新的 autoresearch 反而最高：社区对“Agent 自主做研究”的兴趣，已超过对“如何训练模型”本身的兴趣。</div>
+            <div class="insight"><span class="tag">STILL A CLASSIC</span>nanoGPT 已过时仍居第二，说明最短可读实现的教学价值长期有效。</div>
+            <div class="insight"><span class="tag">BEST ROI</span>minbpe 最低但最“便宜”：一周内可完全掌握，投入产出比极高。</div>
+          </div>
+
+          <h3 class="blk-title">达到 GPT-2 能力的成本断崖</h3>
+          <figure class="fig cost">
+            <figcaption><b>FIG.06 · 对数刻度</b><span>2019 → 2026，约 900 倍</span></figcaption>
+            <div class="fig-body">
+              <svg viewBox="0 0 640 300" role="img" aria-label="达到 GPT-2 能力的训练成本：2019 年约 43000 美元，2024 年 7 月 672 美元，2025 年 10 月约 300 美元，2026 年 1 月约 73 美元，2026 年 3 月约 40 美元；按需约 48 美元，spot 约 15 美元">
+                <defs>
+                  <linearGradient id="costfill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#ffb347" stop-opacity=".35"/>
+                    <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <g class="grid">
+                  <line x1="70" y1="30" x2="620" y2="30"/><line x1="70" y1="85" x2="620" y2="85"/>
+                  <line x1="70" y1="140" x2="620" y2="140"/><line x1="70" y1="195" x2="620" y2="195"/>
+                  <line x1="70" y1="250" x2="620" y2="250"/>
+                </g>
+                <g class="axis" text-anchor="end">
+                  <text x="62" y="34">$100k</text><text x="62" y="89">$10k</text><text x="62" y="144">$1k</text>
+                  <text x="62" y="199">$100</text><text x="62" y="254">$10</text>
+                </g>
+                <path class="area" d="M100,50.2 L225,149.5 L335,168.8 L430,202.5 L520,216.9 L520,250 L100,250 Z"/>
+                <polyline class="line" points="100,50.2 225,149.5 335,168.8 430,202.5 520,216.9"/>
+                <line class="range" x1="560" y1="240.3" x2="560" y2="212.5"/>
+                <line class="range" x1="554" y1="212.5" x2="566" y2="212.5"/>
+                <line class="range" x1="554" y1="240.3" x2="566" y2="240.3"/>
+                <text class="rlbl" x="572" y="216">$48 按需</text>
+                <text class="rlbl" x="572" y="244">$15 spot</text>
+                <circle class="pt" cx="100" cy="50.2" r="5"/>
+                <circle class="pt" cx="225" cy="149.5" r="5"/>
+                <circle class="pt" cx="335" cy="168.8" r="5"/>
+                <circle class="pt" cx="430" cy="202.5" r="5"/>
+                <circle class="pt" cx="520" cy="216.9" r="5"/>
+                <text class="val" x="112" y="46">$43,000</text>
+                <text class="val" x="225" y="136" text-anchor="middle">$672</text>
+                <text class="val" x="335" y="155" text-anchor="middle">$300</text>
+                <text class="val" x="430" y="189" text-anchor="middle">$73</text>
+                <text class="val" x="512" y="236" text-anchor="end">$40</text>
+                <text class="big" x="620" y="60" text-anchor="end">7 年 · 成本下降约 900×</text>
+                <g text-anchor="middle">
+                  <text class="xl" x="100" y="272">2019</text><text class="xs" x="100" y="289">OpenAI 原版</text>
+                  <text class="xl" x="225" y="272">2024-07</text><text class="xs" x="225" y="289">llm.c 1.6B</text>
+                  <text class="xl" x="335" y="272">2025-10</text><text class="xs" x="335" y="289">nanochat ~12h</text>
+                  <text class="xl" x="430" y="272">2026-01</text><text class="xs" x="430" y="289">d24 基线</text>
+                  <text class="xl" x="520" y="272">2026-03</text><text class="xs" x="520" y="289">纪录 1.65h</text>
+                </g>
+              </svg>
+            </div>
+          </figure>
+
+          <h3 class="blk-title">学习耗时 × 难度热力图</h3>
+          <div class="legend"><span>冷 → 热：</span><i class="h1">1</i><i class="h2">2</i><i class="h3">3</i><i class="h4">4</i><i class="h5">5</i></div>
+          <div class="tbl sticky-first heat">
+            <table>
+              <thead><tr><th scope="col">项目</th><th scope="col">预计耗时</th><th scope="col">数学强度</th><th scope="col">编码强度</th><th scope="col">调试难度</th><th scope="col">算力成本</th><th scope="col">综合难度</th></tr></thead>
+              <tbody>
+                <tr style="--c: var(--l1)"><td class="proj">micrograd</td><td class="h h1">1<small>8–12h</small></td><td class="h h3">3</td><td class="h h2">2</td><td class="h h1">1</td><td class="h h1">1</td><td class="h h2 total">2</td></tr>
+                <tr style="--c: var(--l2)"><td class="proj">nn-zero-to-hero</td><td class="h h4">4<small>40–60h</small></td><td class="h h4">4</td><td class="h h3">3</td><td class="h h3">3</td><td class="h h1">1</td><td class="h h3 total">3</td></tr>
+                <tr style="--c: var(--l3)"><td class="proj">minbpe</td><td class="h h1">1<small>8–12h</small></td><td class="h h1">1</td><td class="h h2">2</td><td class="h h2">2</td><td class="h h1">1</td><td class="h h2 total">2</td></tr>
+                <tr style="--c: var(--l4)"><td class="proj">nanoGPT</td><td class="h h2">2<small>15–25h</small></td><td class="h h3">3</td><td class="h h3">3</td><td class="h h3">3</td><td class="h h2">2</td><td class="h h3 total">3</td></tr>
+                <tr style="--c: var(--l5)"><td class="proj">llm.c</td><td class="h h5">5<small>40–80h</small></td><td class="h h4">4</td><td class="h h5">5</td><td class="h h5">5</td><td class="h h3">3</td><td class="h h5 total">5</td></tr>
+                <tr style="--c: var(--l6)"><td class="proj">nanochat</td><td class="h h3">3<small>25–40h</small></td><td class="h h3">3</td><td class="h h4">4</td><td class="h h4">4</td><td class="h h4">4</td><td class="h h4 total">4</td></tr>
+                <tr style="--c: var(--l7)"><td class="proj">autoresearch</td><td class="h h2">2<small>10–20h</small></td><td class="h h2">2</td><td class="h h3">3</td><td class="h h3">3</td><td class="h h3">3</td><td class="h h3 total">3</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid-2">
+            <figure class="fig">
+              <figcaption><b>FIG.07 · 耗时 × 难度象限</b><span>右上为硬骨头</span></figcaption>
+              <div class="fig-body">
+<pre class="mermaid" id="quadChart" aria-label="耗时与难度象限图">
+quadrantChart
+    x-axis 短耗时 --> 长耗时
+    y-axis 低难度 --> 高难度
+    quadrant-1 硬骨头区
+    quadrant-2 短而陡
+    quadrant-3 快速上手
+    quadrant-4 长线积累
+    micrograd: [0.12, 0.22] color: #7cc8ff, radius: 7
+    minbpe: [0.14, 0.34] color: #ffd166, radius: 7
+    nanoGPT: [0.30, 0.56] color: #ff9f5a, radius: 7
+    autoresearch: [0.22, 0.62] color: #ff7ad9, radius: 7
+    nanochat: [0.46, 0.78] color: #4fd6a0, radius: 7
+    nn-zero-to-hero: [0.66, 0.54] color: #a99bff, radius: 7
+    llm.c: [0.86, 0.93] color: #ff6b6b, radius: 7
+</pre>
+              </div>
+            </figure>
+            <figure class="fig">
+              <figcaption><b>FIG.08 · 时间投入分布</b><span>标准路线合计约 200 小时</span></figcaption>
+              <div class="fig-body fig-wrap">
+<pre class="mermaid" id="pieChart" aria-label="时间投入分布饼图">
+pie
+    "前置补课" : 10
+    "micrograd" : 10
+    "makemore 2–6 讲" : 45
+    "GPT 与 nanoGPT" : 22
+    "minbpe" : 10
+    "llm.c（选修）" : 50
+    "nanochat" : 35
+    "autoresearch" : 18
+</pre>
+                <ul class="fig-key" aria-label="图例（小时）">
+                  <li style="--c: var(--l0)"><i></i><span>前置补课</span><b>10 h</b></li>
+                  <li style="--c: var(--l1)"><i></i><span>micrograd</span><b>10 h</b></li>
+                  <li style="--c: var(--l2)"><i></i><span>makemore 2–6 讲</span><b>45 h</b></li>
+                  <li style="--c: var(--l4)"><i></i><span>GPT 与 nanoGPT</span><b>22 h</b></li>
+                  <li style="--c: var(--l3)"><i></i><span>minbpe</span><b>10 h</b></li>
+                  <li style="--c: var(--l5)"><i></i><span>llm.c（选修）</span><b>50 h</b></li>
+                  <li style="--c: var(--l6)"><i></i><span>nanochat</span><b>35 h</b></li>
+                  <li style="--c: var(--l7)"><i></i><span>autoresearch</span><b>18 h</b></li>
+                </ul>
+              </div>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 05 ROADMAP ============ -->
+      <section id="roadmap">
+        <header class="sec-head">
+          <span class="sec-no" aria-hidden="true">05</span>
+          <div><p class="eyebrow">Roadmap</p><h2>学习路线与时间表</h2><p class="sub">每周约 12 小时，以 2026-11-09（周一）为起点，可整体平移。</p></div>
+        </header>
+        <div class="sec-body">
+          <figure class="fig">
+            <figcaption><b>FIG.09 · 17 周标准路线</b><span>斜纹为选修 · <i class="ms-key" role="img" aria-label="菱形"></i>为里程碑</span></figcaption>
+            <div class="fig-body">
+              <div class="gantt" role="list" aria-label="17 周学习路线">
+                <div class="g-row g-axis" aria-hidden="true"><span></span><div class="g-track"><span style="grid-column: 1 / span 4">11/09</span><span style="grid-column: 5 / span 4">12/07</span><span style="grid-column: 9 / span 4">01/04</span><span style="grid-column: 13 / span 4">02/01</span><span style="grid-column: 14 / span 4; justify-self: end">03/07</span></div></div>
+                <div class="g-row" role="listitem" style="--c: var(--l0)"><div class="g-label"><b>P0</b><span>前置补课</span><small>地基 · 第 1 周</small></div><div class="g-track"><span class="g-bar" style="--s: 1; --n: 1"></span></div></div>
+                <div class="g-row" role="listitem" style="--c: var(--l1)"><div class="g-label"><b>P1</b><span>micrograd</span><small>地基 · 第 2 周</small></div><div class="g-track"><span class="g-bar" style="--s: 2; --n: 1"></span></div></div>
+                <div class="g-row" role="listitem" style="--c: var(--l2)"><div class="g-label"><b>P2</b><span>makemore 2–6 讲</span><small>模型 · 第 3–6 周</small></div><div class="g-track"><span class="g-bar" style="--s: 3; --n: 4"></span></div></div>
+                <div class="g-row" role="listitem" style="--c: var(--l4)"><div class="g-label"><b>P3</b><span>GPT 与 nanoGPT</span><small>模型 · 第 7–8 周</small></div><div class="g-track"><span class="g-bar" style="--s: 7; --n: 2"></span></div></div>
+                <div class="g-row" role="listitem" style="--c: var(--l3)"><div class="g-label"><b>P4</b><span>minbpe</span><small>模型 · 第 9 周</small></div><div class="g-track"><span class="g-bar" style="--s: 9; --n: 1"></span></div></div>
+                <div class="g-row" role="listitem" style="--c: var(--l5)"><div class="g-label"><b>P5</b><span>llm.c（选修）</span><small>系统 · 第 10–12 周</small></div><div class="g-track"><span class="g-bar opt" style="--s: 10; --n: 3"></span></div></div>
+                <div class="g-row" role="listitem" style="--c: var(--l6)"><div class="g-label"><b>P6</b><span>nanochat</span><small>产品 · 第 13–15 周</small></div><div class="g-track"><span class="g-bar" style="--s: 13; --n: 3"></span></div></div>
+                <div class="g-row" role="listitem" style="--c: var(--l7)"><div class="g-label"><b>P7</b><span>autoresearch</span><small>智能体 · 第 16–17 周</small></div><div class="g-track"><span class="g-bar" style="--s: 16; --n: 2"></span><span class="g-ms" title="03/07 第一次通宵实验"></span></div></div>
+              </div>
+            </div>
+            <div class="fig-foot"><span><i class="ms-key" role="img" aria-label="里程碑"></i>03/07 第一次通宵实验</span><span>选修的 P5 可跳过，整体提前 3 周</span></div>
+          </figure>
+
+          <h3 class="blk-title">分阶段目标与验收标准</h3>
+          <div class="tbl sticky-first">
+            <table>
+              <thead><tr><th scope="col">阶段</th><th scope="col">周数</th><th scope="col">目标</th><th scope="col">验收标准（Definition of Done）</th><th scope="col">预算</th></tr></thead>
+              <tbody>
+                <tr style="--c: var(--l0)"><td class="proj">P0 前置</td><td>1</td><td>导数与链式法则、矩阵乘法、softmax 与交叉熵</td><td>能手算两层网络对单个权重的偏导</td><td>$0</td></tr>
+                <tr style="--c: var(--l1)"><td class="proj">P1 micrograd</td><td>1</td><td>理解自动微分</td><td>不看源码写出 <code>Value</code>，数值梯度误差 &lt; 1e-6；moon 分类决策边界正确</td><td>$0</td></tr>
+                <tr style="--c: var(--l2)"><td class="proj">P2 makemore</td><td>4</td><td>语言建模与训练动力学</td><td>能解释初始 loss 为何应 ≈ 3.30；Backprop Ninja 练习全部手推通过</td><td>$0</td></tr>
+                <tr style="--c: var(--l4)"><td class="proj">P3 GPT</td><td>2</td><td>Transformer 与训练循环</td><td>shakespeare_char 验证 loss ≈ 1.47（GPU）或 ≈ 1.88（CPU 版）</td><td>$0（Colab）</td></tr>
+                <tr style="--c: var(--l3)"><td class="proj">P4 minbpe</td><td>1</td><td>掌握 BPE</td><td>自写分词器与 tiktoken <code>cl100k_base</code> 输出一致</td><td>$0</td></tr>
+                <tr style="--c: var(--l5)"><td class="proj">P5 llm.c</td><td>3</td><td>无框架训练与 GPU 性能（选修）</td><td>CPU 版 <code>train_gpt2</code> 跑通且 <code>test_gpt2</code> 通过；进阶读懂一个 kernel 的多版本优化</td><td>$0–$20</td></tr>
+                <tr style="--c: var(--l6)"><td class="proj">P6 nanochat</td><td>3</td><td>全流程系统观</td><td>小 depth 本地跑通 → 一次 speedrun，<code>report.md</code> 中 CORE &gt; 0.2565</td><td>~$50–$80</td></tr>
+                <tr style="--c: var(--l7)"><td class="proj">P7 autoresearch</td><td>2</td><td>评测驱动的自主实验循环</td><td>一晚约 100 次实验，<code>val_bpb</code> 优于基线，能解释每条保留改动</td><td>~$25/晚 + API</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid-2">
+            <div class="sec-body">
+              <h3 class="blk-title">工程师快速通道 · 8–9 周</h3>
+              <ol class="track">
+                <li style="--c: var(--l1)"><span class="wk">W1</span><div class="bd"><span class="tag">MATH</span>micrograd（2 天）+ makemore 1–2 快速过</div></li>
+                <li style="--c: var(--l2)"><span class="wk">W2</span><div class="bd"><span class="tag">MODEL</span>makemore 3–4：初始化、BatchNorm、Backprop Ninja</div></li>
+                <li style="--c: var(--l2)"><span class="wk">W3</span><div class="bd"><span class="tag">MODEL</span>makemore 5 + Let's build GPT</div></li>
+                <li style="--c: var(--l4)"><span class="wk">W4</span><div class="bd"><span class="tag">TRAIN</span>nanoGPT shakespeare_char，读完 model.py / train.py</div></li>
+                <li style="--c: var(--l3)"><span class="wk">W5</span><div class="bd"><span class="tag">TOKEN</span>minbpe，可用 Rust 重写作为练习</div></li>
+                <li style="--c: var(--l5)"><span class="wk">W6</span><div class="bd"><span class="tag">LOW</span>llm.c CPU 版：读 train_gpt2.c，跑通 test_gpt2</div></li>
+                <li style="--c: var(--l6)"><span class="wk">W7</span><div class="bd"><span class="tag">PRODUCT</span>nanochat：小 depth 本地 → 云上 d12 → d24 speedrun</div></li>
+                <li style="--c: var(--l7)"><span class="wk">W9</span><div class="bd"><span class="tag">AGENT</span>autoresearch：写 program.md → 通宵实验 → 复盘 git log</div></li>
+              </ol>
+            </div>
+            <div class="sec-body">
+              <h3 class="blk-title">总预算参考</h3>
+              <div class="tbl">
+                <table>
+                  <thead><tr><th scope="col">阶段</th><th scope="col">GPU 费用</th><th scope="col">说明</th></tr></thead>
+                  <tbody>
+                    <tr><td>P0–P4</td><td>$0</td><td>本地 CPU / Colab 免费档</td></tr>
+                    <tr><td>P5 llm.c</td><td>$0–$20</td><td>CPU 免费；复现 124M 约 $20</td></tr>
+                    <tr><td>P6 nanochat</td><td>$50–$80</td><td>d12 试跑 + d24 speedrun + 50% 缓冲</td></tr>
+                    <tr><td>P7 autoresearch</td><td>$25–$75</td><td>单卡 H100，1–3 晚</td></tr>
+                    <tr><td><strong>合计</strong></td><td><strong>$75–$175</strong></td><td>另计 Coding Agent 的 API / 订阅</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="blk-title">各阶段避坑指南</h3>
+          <div class="pits">
+            <div class="pit" style="--c: var(--l1)">
+              <h4><span class="tag">P1</span>micrograd</h4>
+              <ul>
+                <li class="bad">反向时用 <code>=</code> 覆盖梯度：复用节点（如 <code>a + a</code>）的梯度会错，必须 <code>+=</code></li>
+                <li class="bad">每步训练前忘记梯度清零：梯度跨 step 累积，loss 发散</li>
+                <li class="good">用 <code>(f(x+h) − f(x−h)) / 2h</code> 做梯度检查，<code>h</code> 取 1e-5 左右</li>
+              </ul>
+            </div>
+            <div class="pit" style="--c: var(--l2)">
+              <h4><span class="tag">P2</span>makemore</h4>
+              <ul>
+                <li class="bad">初始 loss 远高于 3.30：输出 logits 过于自信，应缩小最后一层初始化</li>
+                <li class="bad">tanh 大面积饱和（|t| &gt; 0.99）：梯度消失，看激活直方图调初始化</li>
+                <li class="bad">BatchNorm 推理时仍用 batch 统计量：应切换到 running mean / var</li>
+                <li class="good">手推反向时处处检查 shape，求和注意 <code>keepdim=True</code></li>
+              </ul>
+            </div>
+            <div class="pit" style="--c: var(--l4)">
+              <h4><span class="tag">P3</span>GPT / nanoGPT</h4>
+              <ul>
+                <li class="bad">忘记因果掩码或 <code>1/√dₖ</code> 缩放：loss 异常低（偷看未来）或训练不稳</li>
+                <li class="bad">生成时上下文超过 <code>block_size</code>：采样前裁剪到最后 <code>block_size</code> 个 token</li>
+                <li class="bad">梯度累积时 loss 没除以累积步数：等效学习率被放大</li>
+                <li class="good">Mac 上用 <code>--device=mps</code>，没有 Triton 的环境加 <code>--compile=False</code></li>
+              </ul>
+            </div>
+            <div class="pit" style="--c: var(--l3)">
+              <h4><span class="tag">P4</span>minbpe</h4>
+              <ul>
+                <li class="bad">编码时按当前最高频对合并：必须按训练时 merge 的先后顺序</li>
+                <li class="bad">用标准库 <code>re</code> 跑 GPT-4 正则：<code>\p{L}</code> 需要第三方 <code>regex</code> 库</li>
+                <li class="good">解码不完整 UTF-8 序列时用 <code>errors="replace"</code></li>
+                <li class="good">编码不可信输入时默认禁止特殊 token，按需显式允许</li>
+              </ul>
+            </div>
+            <div class="pit" style="--c: var(--l5)">
+              <h4><span class="tag">P5</span>llm.c</h4>
+              <ul>
+                <li class="bad">一上来啃多卡 CUDA 主线：先读 CPU fp32 版，再看 <code>dev/cuda/</code> 中单个 kernel 的演进</li>
+                <li class="bad">跳过 <code>download_starter_pack.sh</code>：缺权重、分词器和 debug state</li>
+                <li class="good">调试时把 Makefile 里的 <code>-O3</code> 换成 <code>-g</code>，即可在 IDE 中单步</li>
+                <li class="good">CPU 训练设置 <code>OMP_NUM_THREADS</code></li>
+              </ul>
+            </div>
+            <div class="pit" style="--c: var(--l6)">
+              <h4><span class="tag">P6</span>nanochat</h4>
+              <ul>
+                <li class="money">最大的坑是钱：GPU 节点空转照样计费，用 tmux 跑，结束立即关机</li>
+                <li class="bad">直接上 d24：先 CPU/MPS 小脚本，再 d12 验证全链路，最后 d24</li>
+                <li class="bad">期待 ChatGPT 级对话：它是“幼儿园水平”的教学模型，也不适合做个性化应用</li>
+                <li class="good">小显存 OOM 就调小单卡 batch；spot 实例务必保存 checkpoint</li>
+              </ul>
+            </div>
+            <div class="pit" style="--c: var(--l7)">
+              <h4><span class="tag">P7</span>autoresearch</h4>
+              <ul>
+                <li class="bad">把 5 分钟内的微小提升当真：短训练噪声大，重要改动换 seed 复跑</li>
+                <li class="bad">Agent 改评测或时间预算：在 <code>program.md</code> 中禁止，review 时检查是否触碰 <code>prepare.py</code></li>
+                <li class="bad">对验证集过拟合：定期在更大 depth 上复核保留的改动</li>
+                <li class="money">Agent API 费用可能超过 GPU 费用，先设上限</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ 06 ADVICE ============ -->
+      <section id="advice">
+        <header class="sec-head">
+          <span class="sec-no" aria-hidden="true">06</span>
+          <div><p class="eyebrow">Your Path</p><h2>结合 Agent&nbsp;/ 系统&nbsp;/ 机器人方向的建议</h2></div>
+        </header>
+        <div class="advice">
+          <div class="adv" style="--c: var(--l1)"><span class="tag">PYTHON · 主轴</span><h3>前四阶段走快速通道</h3><p>P1–P4 可以大幅压缩，把省下的时间投入 llm.c、nanochat 和 autoresearch。</p></div>
+          <div class="adv" style="--c: var(--l5)"><span class="tag">C++ · 在学</span><h3>llm.c 是最好的练兵场</h3><p>手写前向 / 反向、连续内存布局、CUDA kernel 与对拍测试，这套“性能 + 正确性”习惯可直接迁移到机器人与自动驾驶的端侧推理优化。</p></div>
+          <div class="adv" style="--c: var(--l3)"><span class="tag">RUST · 在学</span><h3>用 Rust 重写 minbpe</h3><p>对照社区 <code>minbpe-rs</code>，再去读 nanochat 的 Rust 分词器，是语言学习与 LLM 理解的双赢练习。</p></div>
+          <div class="adv" style="--c: var(--l7)"><span class="tag">AGENT · 深耕</span><h3>autoresearch 是极简 Harness</h3><p><code>program.md</code> ≈ 指令 / Skill，固定预算 + <code>val_bpb</code> ≈ 可验证奖励，git 提交 / 回滚 ≈ 状态管理与安全边界。任何有客观指标的任务都能套用这个循环。</p></div>
+        </div>
+      </section>
+
+      <!-- ============ SOURCES ============ -->
+      <section id="sources">
+        <header class="sec-head">
+          <span class="sec-no" aria-hidden="true">07</span>
+          <div><p class="eyebrow">References</p><h2>来源</h2></div>
+        </header>
+        <ul class="sources">
+          <li><a href="https://github.com/karpathy/micrograd" target="_blank" rel="noopener"><small>github.com</small><span>karpathy/micrograd</span></a></li>
+          <li><a href="https://github.com/karpathy/nn-zero-to-hero" target="_blank" rel="noopener"><small>github.com</small><span>karpathy/nn-zero-to-hero</span></a></li>
+          <li><a href="https://github.com/karpathy/minbpe" target="_blank" rel="noopener"><small>github.com</small><span>karpathy/minbpe</span></a></li>
+          <li><a href="https://github.com/karpathy/nanoGPT" target="_blank" rel="noopener"><small>github.com</small><span>karpathy/nanoGPT</span></a></li>
+          <li><a href="https://github.com/karpathy/llm.c" target="_blank" rel="noopener"><small>github.com</small><span>karpathy/llm.c</span></a></li>
+          <li><a href="https://github.com/karpathy/llm.c/discussions/481" target="_blank" rel="noopener"><small>llm.c #481</small><span>90 分钟 $20 复现 GPT-2 124M</span></a></li>
+          <li><a href="https://github.com/karpathy/llm.c/discussions/677" target="_blank" rel="noopener"><small>llm.c #677</small><span>24 小时 $672 复现 GPT-2 1.6B</span></a></li>
+          <li><a href="https://github.com/karpathy/nanochat" target="_blank" rel="noopener"><small>github.com</small><span>karpathy/nanochat</span></a></li>
+          <li><a href="https://github.com/karpathy/nanochat/discussions/1" target="_blank" rel="noopener"><small>nanochat #1</small><span>Introducing nanochat</span></a></li>
+          <li><a href="https://github.com/karpathy/autoresearch" target="_blank" rel="noopener"><small>github.com</small><span>karpathy/autoresearch</span></a></li>
+          <li><a href="https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/" target="_blank" rel="noopener"><small>fortune.com</small><span>The Karpathy Loop（2026-03）</span></a></li>
+          <li><a href="https://www.freecodecamp.org/news/build-an-ai-agent-that-runs-its-own-llm-experiments-with-autoresearch/" target="_blank" rel="noopener"><small>freecodecamp.org</small><span>用 autoresearch 构建自主实验 Agent</span></a></li>
+        </ul>
+        <footer class="end">与《斯坦福 AI 课程地图》同一设计系列 · 数据核对于 2026-11-02 · Star 数取自 GitHub 仓库页 · 耗时、难度、预算为经验估计 · 成本按约 $3 / GPU·小时</footer>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<button class="totop" id="totop" type="button" aria-label="回到顶部"><svg class="i" aria-hidden="true"><use href="#i-up"/></svg></button>
+
+<script>
+(function () {
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var css = getComputedStyle(document.documentElement);
+  function token(name) { return css.getPropertyValue(name).trim(); }
+
+  /* ---------- Mermaid: radar, quadrant, pie — themed from the same tokens ---------- */
+  function renderDiagrams() {
+    if (!window.mermaid) { document.documentElement.classList.add("no-mermaid"); return; }
+    var T = {
+      darkMode: true,
+      background: token("--panel"),
+      fontFamily: '"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif',
+      fontSize: "14px",
+      primaryColor: token("--panel-2"), primaryTextColor: token("--ink"), primaryBorderColor: token("--rule-2"),
+      lineColor: "#7f8fa9", textColor: "#c9d3e3", titleColor: token("--ink"),
+      pie1: token("--l0"), pie2: token("--l1"), pie3: token("--l2"), pie4: token("--l4"),
+      pie5: token("--l3"), pie6: token("--l5"), pie7: token("--l6"), pie8: token("--l7"),
+      pieTitleTextColor: token("--ink"), pieSectionTextColor: token("--void"), pieLegendTextColor: "#c9d3e3",
+      pieStrokeColor: token("--panel"), pieOuterStrokeColor: token("--rule-2"), pieOpacity: "0.95",
+      quadrant1Fill: "#2a1a22", quadrant2Fill: "#2a2317", quadrant3Fill: "#12251f", quadrant4Fill: "#142033",
+      quadrant1TextFill: "#ff9aa2", quadrant2TextFill: "#ffd08a", quadrant3TextFill: "#7fe3b8", quadrant4TextFill: "#9fd4ff",
+      quadrantPointFill: token("--amber"), quadrantPointTextFill: token("--ink"),
+      quadrantXAxisTextFill: token("--dim"), quadrantYAxisTextFill: token("--dim"), quadrantTitleFill: token("--ink"),
+      quadrantInternalBorderStrokeFill: token("--rule"), quadrantExternalBorderStrokeFill: token("--rule-2"),
+      cScale0: token("--l4"), cScale1: token("--l5"), cScale2: token("--l6"), cScale3: token("--l7"),
+      radar: { graticuleColor: token("--rule-2"), axisColor: "#5b6a85", curveOpacity: 0.22, curveStrokeWidth: 2.5, graticuleOpacity: 0.5 }
+    };
+    var ready = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+    ready.catch(function () {}).then(function () {
+      /* measure each figure body with the raw Mermaid source hidden, so long source lines cannot widen the grid track */
+      var pres = [].slice.call(document.querySelectorAll("pre.mermaid"));
+      pres.forEach(function (el) { el.style.display = "none"; });
+      var boxW = function (id) {
+        var host = document.getElementById(id).parentNode, cs = getComputedStyle(host);
+        return (host.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) || 400;
+      };
+      var qw = Math.min(520, boxW("quadChart")), R = Math.max(80, Math.min(170, Math.round((boxW("radarChart") - 160) / 1.82)));
+      pres.forEach(function (el) { el.style.display = ""; });
+      T.radar.axisLabelFontSize = 13; T.radar.legendFontSize = 12;
+      window.mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme: "base", themeVariables: T,
+        radar: { curveTension: 0, width: 2 * R, height: 2 * R, marginTop: 28, marginBottom: 28, marginLeft: 96, marginRight: 96, axisLabelFactor: 1.1 },
+        quadrantChart: { chartWidth: qw, chartHeight: Math.min(qw, 440), pointLabelFontSize: 12, quadrantLabelFontSize: 14, xAxisLabelFontSize: 13, yAxisLabelFontSize: 13 } });
+      return window.mermaid.run({ querySelector: "pre.mermaid" });
+    }).then(function () {
+      /* FIG.08: crop the pie to its disc; the HTML key below replaces Mermaid's legend so it stays legible on phones */
+      var svg = document.querySelector("#pieChart svg"), c = svg && svg.querySelector(".pieOuterCircle");
+      if (!c) return;
+      var x = +c.getAttribute("cx") || 0, y = +c.getAttribute("cy") || 0, r = +c.getAttribute("r") + 3;
+      for (var n = c.parentNode; n && n !== svg; n = n.parentNode) {
+        var t = n.transform && n.transform.baseVal.consolidate();
+        if (t) { x += t.matrix.e; y += t.matrix.f; }
+      }
+      svg.setAttribute("viewBox", (x - r) + " " + (y - r) + " " + 2 * r + " " + 2 * r);
+      svg.style.maxWidth = "260px";
+      /* FIG.02: fit the radar to its drawn content (axis labels included, Mermaid legend replaced by the HTML key) */
+      var rs = document.querySelector("#radarChart svg");
+      if (rs) { [].forEach.call(rs.querySelectorAll(".radarLegendText"), function (t) { t.parentNode.remove(); });
+        var bb = rs.getBBox(); rs.setAttribute("viewBox", (bb.x - 6) + " " + (bb.y - 6) + " " + (bb.width + 12) + " " + (bb.height + 12)); rs.style.maxWidth = Math.ceil(bb.width + 12) + "px"; }
+      /* FIG.07: place each point label above its dot, else beside or below it, whichever hits no other dot, label or quadrant title */
+      var qs = document.querySelector("#quadChart svg");
+      if (qs) {
+        var plot = qs.querySelector(".quadrants").getBBox();
+        var tBox = function (t) { var b = t.getBBox(), m = t.transform.baseVal.consolidate().matrix; return { x: b.x + m.e, y: b.y + m.f, w: b.width, h: b.height }; };
+        var hit = function (a, b) { return a.x < b.x + b.w + 2 && b.x < a.x + a.w + 2 && a.y < b.y + b.h + 1 && b.y < a.y + a.h + 1; };
+        var inside = function (a) { return a.x >= plot.x + 2 && a.x + a.w <= plot.x + plot.width - 2 && a.y >= plot.y + 2 && a.y + a.h <= plot.y + plot.height - 2; };
+        var dots = [].map.call(qs.querySelectorAll(".data-point circle"), function (c) { var b = c.getBBox(); return { x: b.x, y: b.y, w: b.width, h: b.height }; });
+        [].forEach.call(qs.querySelectorAll(".quadrant"), function (g) {
+          var t = g.querySelector("text"), q = g.querySelector("rect").getBBox(), b = tBox(t), m = t.transform.baseVal.consolidate().matrix, dx = 0;
+          dots.forEach(function (d) { if (hit(b, d)) dx = d.x + d.w / 2 > b.x + b.w / 2 ? d.x - 4 - (b.x + b.w) : d.x + d.w + 4 - b.x; });
+          dx = Math.max(q.x + 6 - b.x, Math.min(q.x + q.width - 6 - (b.x + b.w), dx));
+          if (dx) t.setAttribute("transform", "translate(" + (m.e + dx) + ", " + m.f + ")");
+        });
+        var fixed = [].map.call(qs.querySelectorAll(".quadrant text"), tBox);
+        var pts = [].map.call(qs.querySelectorAll(".data-point"), function (g) {
+          var c = g.querySelector("circle").getBBox(), t = g.querySelector("text");
+          return { dot: { x: c.x, y: c.y, w: c.width, h: c.height }, t: t, box: tBox(t) };
+        });
+        pts.forEach(function (p) {
+          var clear = function (box) {
+            return inside(box) && !fixed.some(function (f) { return hit(box, f); }) &&
+              !pts.some(function (o) { return hit(box, o.dot) || (o !== p && hit(box, o.box)); });
+          };
+          var d = p.dot, w = p.box.w, h = p.box.h, cx = d.x + d.w / 2, cy = d.y + d.h / 2;
+          [{ x: cx - w / 2, y: d.y - 3 - h, a: "middle" }, { x: d.x + d.w + 4, y: cy - h / 2, a: "start" }, { x: d.x - 4 - w, y: cy - h / 2, a: "end" }, { x: cx - w / 2, y: d.y + d.h + 3, a: "middle" }].some(function (c) {
+            var box = { x: c.x, y: c.y, w: w, h: h };
+            if (!clear(box)) return false;
+            var ax = c.a === "middle" ? c.x + w / 2 : c.a === "start" ? c.x : c.x + w;
+            p.t.setAttribute("text-anchor", c.a);
+            p.t.setAttribute("transform", "translate(" + ax + ", " + (c.y + (p.box.y - p.t.transform.baseVal.consolidate().matrix.f) * -1) + ")");
+            p.box = tBox(p.t);
+            return true;
+          });
+        });
+      }
+    }).catch(function (err) {
+      document.documentElement.classList.add("no-mermaid");
+      if (window.console) console.error(err);
+    });
+  }
+
+  /* ---------- FIG.01 dependency map: SVG edges measured from the live layout ---------- */
+  var EDGES = [
+    { f: "pre", t: "mg", fa: 0.5, ta: 0.5 },
+    { f: "mg", t: "nn", fa: 0.5, ta: 0.5 },
+    { f: "nn", t: "bpe", fa: 0.3, ta: 0.5, label: "第 8 讲" },
+    { f: "nn", t: "ng", fa: 0.7, ta: 0.5, label: "第 7 讲" },
+    { f: "bpe", t: "nc", fa: 0.5, ta: 0.3, label: "分词器" },
+    { f: "ng", t: "nc", fa: 0.1, ta: 0.55 },
+    { f: "ng", t: "lc", fa: 0.8, ta: 0.5, dash: true, label: "改版 nanoGPT" },
+    { f: "lc", t: "nc", fa: 0.5, ta: 0.88, dash: true, label: "性能直觉" },
+    { f: "nc", t: "ar", fa: 0.5, ta: 0.5, label: "单卡单文件" },
+    { f: "ar", t: "nc", loop: true, dash: true, label: "成果回流" }
+  ];
+  var map = document.getElementById("depmap");
+  var NS = "http://www.w3.org/2000/svg";
+
+  function drawDeps() {
+    if (!map) return;
+    var svg = map.querySelector(".dep-edges");
+    var box = map.getBoundingClientRect();
+    if (!box.width) return;
+    svg.setAttribute("viewBox", "0 0 " + box.width + " " + box.height);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    Array.prototype.forEach.call(map.querySelectorAll(".dep-label"), function (n) { n.remove(); });
+    var defs = document.createElementNS(NS, "defs");
+    svg.appendChild(defs);
+
+    function node(id) { return map.querySelector('[data-node="' + id + '"]'); }
+    function rect(id) {
+      var r = node(id).getBoundingClientRect();
+      return { x: r.left - box.left, y: r.top - box.top, w: r.width, h: r.height };
+    }
+    function color(id) { return getComputedStyle(node(id)).getPropertyValue("--c").trim() || "#8b97ab"; }
+    var markers = {};
+    function marker(c) {
+      if (markers[c]) return markers[c];
+      var id = "dm" + Object.keys(markers).length;
+      var m = document.createElementNS(NS, "marker");
+      m.setAttribute("id", id); m.setAttribute("viewBox", "0 0 10 10"); m.setAttribute("refX", "9"); m.setAttribute("refY", "5");
+      m.setAttribute("markerWidth", "9"); m.setAttribute("markerHeight", "9"); m.setAttribute("markerUnits", "userSpaceOnUse"); m.setAttribute("orient", "auto");
+      var p = document.createElementNS(NS, "path"); p.setAttribute("d", "M0,1 L9,5 L0,9 z"); p.setAttribute("fill", c);
+      m.appendChild(p); defs.appendChild(m);
+      markers[c] = id; return id;
+    }
+
+    EDGES.forEach(function (e, i) {
+      var a = rect(e.f), b = rect(e.t), p1, p2, d;
+      if (e.loop) {
+        p1 = [a.x, a.y + a.h / 2]; p2 = [b.x, b.y + b.h / 2];
+        var bulge = Math.max(22, Math.min(64, p1[0] - 8));
+        d = "M" + p1[0] + "," + p1[1] + " C" + (p1[0] - bulge) + "," + p1[1] + " " + (p2[0] - bulge) + "," + p2[1] + " " + p2[0] + "," + p2[1];
+      } else {
+        p1 = [a.x + a.w * e.fa, a.y + a.h]; p2 = [b.x + b.w * e.ta, b.y];
+        var c = Math.max(18, (p2[1] - p1[1]) * 0.5);
+        d = "M" + p1[0] + "," + p1[1] + " C" + p1[0] + "," + (p1[1] + c) + " " + p2[0] + "," + (p2[1] - c) + " " + p2[0] + "," + p2[1];
+      }
+      var cf = color(e.f), ct = color(e.t);
+      var g = document.createElementNS(NS, "linearGradient");
+      g.setAttribute("id", "dg" + i); g.setAttribute("gradientUnits", "userSpaceOnUse");
+      g.setAttribute("x1", p1[0]); g.setAttribute("y1", p1[1]); g.setAttribute("x2", p2[0]); g.setAttribute("y2", p2[1] + (p1[1] === p2[1] ? 1 : 0));
+      [[0, cf], [1, ct]].forEach(function (s) {
+        var st = document.createElementNS(NS, "stop"); st.setAttribute("offset", s[0]); st.setAttribute("stop-color", s[1]); g.appendChild(st);
+      });
+      defs.appendChild(g);
+
+      var path = document.createElementNS(NS, "path");
+      path.setAttribute("d", d);
+      path.setAttribute("class", "e" + (e.dash ? " dash" : ""));
+      path.setAttribute("stroke", "url(#dg" + i + ")");
+      path.setAttribute("marker-end", "url(#" + marker(ct) + ")");
+      path.dataset.f = e.f; path.dataset.t = e.t;
+      svg.appendChild(path);
+      if (!e.dash && !reduce) {
+        var sig = document.createElementNS(NS, "path");
+        sig.setAttribute("d", d); sig.setAttribute("class", "sig");
+        sig.dataset.f = e.f; sig.dataset.t = e.t;
+        svg.appendChild(sig);
+      }
+      if (e.label) {
+        var len = path.getTotalLength();
+        var mid = path.getPointAtLength(len / 2);
+        var lab = document.createElement("span");
+        lab.className = "dep-label" + (e.loop ? " v" : "");
+        lab.textContent = e.label;
+        lab.dataset.f = e.f; lab.dataset.t = e.t;
+        map.appendChild(lab);
+        var hw = lab.offsetWidth / 2;
+        var x = Math.min(Math.max(mid.x, hw + 2), box.width - hw - 2);
+        lab.style.left = x + "px"; lab.style.top = mid.y + "px";
+      }
+    });
+  }
+
+  function focusNode(id) {
+    if (!map) return;
+    map.classList.add("is-focus");
+    var linked = {}; linked[id] = true;
+    Array.prototype.forEach.call(map.querySelectorAll("[data-f]"), function (el) {
+      var on = el.dataset.f === id || el.dataset.t === id;
+      el.classList.toggle("on", on);
+      if (on) { linked[el.dataset.f] = true; linked[el.dataset.t] = true; }
+    });
+    Array.prototype.forEach.call(map.querySelectorAll(".dn"), function (n) { n.classList.toggle("on", !!linked[n.dataset.node]); });
+  }
+  function clearFocus() {
+    if (!map) return;
+    map.classList.remove("is-focus");
+    Array.prototype.forEach.call(map.querySelectorAll(".on"), function (el) { el.classList.remove("on"); });
+  }
+  if (map) {
+    Array.prototype.forEach.call(map.querySelectorAll(".dn"), function (n) {
+      /* hover highlight only for a real mouse; keyboard focus only when :focus-visible; a tap or click never leaves the map dimmed */
+      n.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse") focusNode(n.dataset.node); });
+      n.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") clearFocus(); });
+      n.addEventListener("focus", function () { var kb = true; try { kb = n.matches(":focus-visible"); } catch (err) {} if (kb) focusNode(n.dataset.node); });
+      n.addEventListener("blur", clearFocus);
+      n.addEventListener("click", clearFocus);
+    });
+    if (window.ResizeObserver) { new ResizeObserver(function () { window.requestAnimationFrame(drawDeps); }).observe(map); }
+    else { window.addEventListener("resize", drawDeps); }
+    drawDeps();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawDeps).catch(function () {});
+  }
+
+  document.addEventListener("DOMContentLoaded", renderDiagrams);
+
+  /* ---------- TOC: drawer + smooth in-page jumps ---------- */
+  var body = document.body;
+  var menuBtn = document.getElementById("menuBtn");
+  var tocEl = document.getElementById("toc");
+  function setDrawer(open, restoreFocus) {
+    body.classList.toggle("toc-open", open);
+    menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) { var first = tocEl.querySelector("a"); if (first) setTimeout(function () { first.focus(); }, 60); }
+    else if (restoreFocus) menuBtn.focus();
+  }
+  menuBtn.addEventListener("click", function () { setDrawer(!body.classList.contains("toc-open"), false); });
+  document.getElementById("scrim").addEventListener("click", function () { setDrawer(false, true); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && body.classList.contains("toc-open")) setDrawer(false, true); });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.toc a[href^="#"], a.dn[href^="#"]'), function (a) {
+    a.addEventListener("click", function (e) {
+      var el = document.getElementById(a.getAttribute("href").slice(1));
+      if (!el) return;
+      e.preventDefault();
+      if (body.classList.contains("toc-open")) setDrawer(false, false);
+      el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    });
+  });
+
+  /* ---------- scrollspy + progress + back-to-top ---------- */
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a[href^="#"]'));
+  var targets = links.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); });
+  var bar = document.getElementById("bar");
+  var totop = document.getElementById("totop");
+  var modulesLink = document.querySelector('.toc a[href="#modules"]');
+  var ticking = false;
+  function update() {
+    ticking = false;
+    var doc = document.documentElement;
+    var max = Math.max(1, doc.scrollHeight - window.innerHeight);
+    var y = window.scrollY || doc.scrollTop;
+    bar.style.width = Math.min(100, (y / max) * 100) + "%";
+    totop.classList.toggle("show", y > 900);
+    var current = -1, best = -Infinity;
+    targets.forEach(function (el, i) {
+      if (!el) return;
+      var top = el.getBoundingClientRect().top;
+      if (top <= 140 && top > best) { best = top; current = i; }
+    });
+    links.forEach(function (a, i) {
+      var on = i === current;
+      a.classList.toggle("active", on);
+      if (on) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current");
+    });
+    if (current >= 0 && links[current].closest(".sub") && modulesLink) modulesLink.classList.add("active");
+  }
+  window.addEventListener("scroll", function () { if (!ticking) { ticking = true; window.requestAnimationFrame(update); } }, { passive: true });
+  window.addEventListener("resize", update);
+  update();
+  totop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); });
+
+  /* ---------- copy buttons ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll(".term .copy"), function (btn) {
+    btn.setAttribute("aria-live", "polite");
+    btn.addEventListener("click", function () {
+      var pre = btn.closest(".term").querySelector("pre");
+      var text = pre ? pre.innerText : "";
+      function done(ok) {
+        btn.textContent = ok ? "已复制" : "复制失败";
+        btn.classList.toggle("ok", ok);
+        setTimeout(function () { btn.textContent = "复制"; btn.classList.remove("ok"); }, 1600);
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+        else done(false);
+      } catch (err) { done(false); }
+    });
+  });
+})();
+</script>
+</body>
+</html>
