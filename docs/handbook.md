@@ -17,7 +17,7 @@
 |:---:|:---:|:---:|:---:|
 | 个开源仓库 | GitHub Star 合计 | 标准路线 · 17 周 | 全程 GPU 预算 |
 
-`DATA` 核对于 2026-11-02　·　Star 取自 GitHub 仓库页　·　耗时与难度为经验估计
+`DATA` 核对于 2026-11-02 · Star 取自 GitHub 仓库页 · 耗时与难度为经验估计
 
 ---
 
@@ -26,8 +26,8 @@
 - [00 一页速览](#00-一页速览)
 - [01 技能雷达与图谱架构](#01-技能雷达与图谱架构)
 - [02 核心模块拆解](#02-核心模块拆解)
-  - [2.1 micrograd](#21-micrograd)　·　[2.2 nn-zero-to-hero](#22-nn-zero-to-hero)　·　[2.3 minbpe](#23-minbpe)　·　[2.4 nanoGPT](#24-nanogpt)
-  - [2.5 llm.c](#25-llmc)　·　[2.6 nanochat](#26-nanochat)　·　[2.7 autoresearch](#27-autoresearch)
+  - [2.1 micrograd](#21-micrograd) · [2.2 nn-zero-to-hero](#22-nn-zero-to-hero) · [2.3 minbpe](#23-minbpe) · [2.4 nanoGPT](#24-nanogpt)
+  - [2.5 llm.c](#25-llmc) · [2.6 nanochat](#26-nanochat) · [2.7 autoresearch](#27-autoresearch)
 - [03 多维对比表](#03-多维对比表)
 - [04 可视化看板](#04-可视化看板)
 - [05 学习路线与时间表](#05-学习路线与时间表)
@@ -49,7 +49,7 @@
 | `L6` | 产品 | nanochat | `#4fd6a0` 绿 |
 | `L7` | 智能体 | autoresearch | `#ff7ad9` 粉 |
 
-`实线` 强依赖，建议按顺序学　`虚线` 选修分支或反哺　`琥珀色` 全文唯一的强调色　难度星级：★ 越多越难
+`实线` 强依赖，建议按顺序学 · `虚线` 选修分支或反哺 · `琥珀色` 全文唯一的强调色 · 难度星级：★ 越多越难
 
 ---
 
@@ -73,21 +73,21 @@
 
 ### 0.2 素材中需要校准的 4 处事实
 
-> `FACT CHECK #1`　~~成本从 4.3 万美元降到 48 美元~~
+> `FACT CHECK #1` ~~成本从 4.3 万美元降到 48 美元~~
 >
-> **$43K** 是 OpenAI 2019 年训练原版 GPT-2（1.5B）的估算成本（32 片 TPU v3，约一周）；**$48** 是 nanochat 2026 版在 8×H100 上约 2 小时达到 GPT-2 CORE 分数的按需价（spot 约 $15）。2025-10 首发的"$100 / 4 小时"档模型尚未达到 GPT-2 水平。
+> **$43K** 是 OpenAI 2019 年训练原版 GPT-2（1.5B）的估算成本（32 片 TPU v3，约一周）；**$48** 是 nanochat 2026 版在 8×H100 上约 2 小时达到 GPT-2 CORE 分数的按需价（spot 约 $15）。2025-10 首发的“$100 / 4 小时”档模型尚未达到 GPT-2 水平。
 
-> `FACT CHECK #2`　~~线性路径 nanoGPT → llm.c → nanochat~~
+> `FACT CHECK #2` ~~线性路径 nanoGPT → llm.c → nanochat~~
 >
 > **llm.c 不是 nanochat 的硬前置。** nanochat 仍基于 PyTorch；llm.c 是向下钻的系统分支，适合想理解性能与底层的人，属于选修。
 
-> `FACT CHECK #3`　~~nanoGPT 是训练 GPT 的首选~~
+> `FACT CHECK #3` ~~nanoGPT 是训练 GPT 的首选~~
 >
 > nanoGPT README 自 **2025-11** 起已标注过时，作者建议改用 nanochat。它仍是最好读的教材，但不再是实践首选。
 
-> `FACT CHECK #4`　~~前三个项目是三个独立阶段~~
+> `FACT CHECK #4` ~~前三个项目是三个独立阶段~~
 >
-> micrograd 是课程**第 1 讲**，nanoGPT 对应**第 7 讲**，minbpe 对应**第 8 讲**：它们是"视频课 + 配套仓库"交织的关系。
+> micrograd 是课程**第 1 讲**，nanoGPT 对应**第 7 讲**，minbpe 对应**第 8 讲**：它们是“视频课 + 配套仓库”交织的关系。
 
 ---
 
@@ -97,7 +97,7 @@
 
 ### 1.1 项目依赖图谱
 
-**FIG.01 · 项目依赖图谱**　连线颜色取目标节点的层级色
+**FIG.01 · 项目依赖图谱** 连线颜色取目标节点的层级色
 
 ```mermaid
 ---
@@ -123,7 +123,7 @@ flowchart TB
     BPE["L3 · Token<br/><b>minbpe</b><br/>BPE 分词器"]
     NG["L4 · 训练<br/><b>nanoGPT</b><br/>GPT-2 训练 / 微调"]
     LC["L5 · 底层 · 选修<br/><b>llm.c</b><br/>纯 C/CUDA 训练<br/>需 C · CUDA · Make"]
-    NC["L6 · 产品<br/><b>nanochat</b><br/>端到端聊天模型<br/>需 云 GPU · uv · torchrun"]
+    NC["L6 · 产品<br/><b>nanochat</b><br/>端到端聊天模型<br/>需云 GPU · uv · torchrun"]
     AR["L7 · 智能体<br/><b>autoresearch</b><br/>自动实验 Agent<br/>需 Coding Agent"]
     PRE --> MG
     MG --> NN
@@ -162,23 +162,23 @@ flowchart TB
     linkStyle 9 stroke:#4fd6a0,stroke-width:2px
 ```
 
-`实线` 强依赖，建议按序　`虚线` 选修分支或反哺　主线可跳过 L5，直达 nanochat
+`实线` 强依赖，建议按序 · `虚线` 选修分支或反哺；主线可跳过 L5，直达 nanochat
 
 ### 1.2 前置知识与心智门槛
 
 | 层级 | 项目 | 硬前置（必须） | 软前置（有更好） | 最难跨过的那道坎 | 门槛 |
 |---|---|---|---|---|---|
-| `L1` | **micrograd** | Python 类与运算符重载；导数、链式法则 | 递归、拓扑排序 | 理解"梯度 = 局部导数 × 上游梯度"，且必须**累加**而非覆盖 | ★☆☆☆☆ |
+| `L1` | **micrograd** | Python 类与运算符重载；导数、链式法则 | 递归、拓扑排序 | 理解“梯度 = 局部导数 × 上游梯度”，且必须**累加**而非覆盖 | ★☆☆☆☆ |
 | `L2` | **nn-zero-to-hero** | micrograd；张量与广播思维 | 概率、最大似然估计 | 第 5 讲不调用 `.backward()`，手推交叉熵与 BatchNorm 的梯度 | ★★★☆☆ |
-| `L3` | **minbpe** | Python 字符串与 `bytes`；UTF-8 | 正则表达式 | "字节 ≠ 字符"；编码时按 merge **先后顺序**而非当前频次合并 | ★★☆☆☆ |
-| `L4` | **nanoGPT** | Transformer 结构；`nn.Module` | DDP、混合精度 | 从"能跑"到"能复现"：学习率调度、梯度累积、读懂 loss 曲线 | ★★★☆☆ |
+| `L3` | **minbpe** | Python 字符串与 `bytes`；UTF-8 | 正则表达式 | “字节 ≠ 字符”；编码时按 merge **先后顺序**而非当前频次合并 | ★★☆☆☆ |
+| `L4` | **nanoGPT** | Transformer 结构；`nn.Module` | DDP、混合精度 | 从“能跑”到“能复现”：学习率调度、梯度累积、读懂 loss 曲线 | ★★★☆☆ |
 | `L5` | **llm.c** | C 指针与内存布局；每层前向 / 反向公式 | CUDA 线程模型、cuBLAS | 没有 autograd：每个算子的反向都要自己写对，并逐层与 PyTorch 对齐 | ★★★★★ |
-| `L6` | **nanochat** | nanoGPT 全部内容 + 分词 | 分布式训练、评测基准、云 GPU 运维 | 全流程系统观：预训练、对话微调、RL、评测、推理服务，并接受"算力即预算" | ★★★★☆ |
-| `L7` | **autoresearch** | nanochat 训练核心；git | Coding Agent 经验、实验设计 | 从"写代码"转向"写研究指令"（`program.md`），并分辨改进是信号还是噪声 | ★★★☆☆ |
+| `L6` | **nanochat** | nanoGPT 全部内容 + 分词 | 分布式训练、评测基准、云 GPU 运维 | 全流程系统观：预训练、对话微调、RL、评测、推理服务，并接受“算力即预算” | ★★★★☆ |
+| `L7` | **autoresearch** | nanochat 训练核心；git | Coding Agent 经验、实验设计 | 从“写代码”转向“写研究指令”（`program.md`），并分辨改进是信号还是噪声 | ★★★☆☆ |
 
 ### 1.3 技能雷达
 
-**FIG.02 · 四个关键阶段**　0–5 分，经验评估；雷达图需 Mermaid 11.6 及以上，不渲染时看下方表格
+**FIG.02 · 四个关键阶段** 0–5 分，经验评估；雷达图需 Mermaid 11.6 及以上，不渲染时看下方表格
 
 ```mermaid
 ---
@@ -231,9 +231,9 @@ radar-beta
 
 ### 2.1 micrograd
 
-> `L1 · 数学层`　反向传播的"原子"：把自动微分压缩进一个标量 `Value` 类
+> `L1 · 数学层` 反向传播的“原子”：把自动微分压缩进一个标量 `Value` 类
 >
-> `LANG` Python · 零依赖　`SIZE` 引擎 ~100 行 + nn ~50 行　`STARS` 18.2k
+> `LANG` Python · 零依赖 · `SIZE` 引擎 ~100 行 + nn ~50 行 · `STARS` 18.2k
 
 #### `MECHANISM` 核心机制
 
@@ -285,9 +285,9 @@ def backward(self):
 
 ### 2.2 nn-zero-to-hero
 
-> `L2 · 模型层`　8 讲视频课配套讲义：从单神经元走到 GPT 和分词器
+> `L2 · 模型层` 8 讲视频课配套讲义：从单神经元走到 GPT 和分词器
 >
-> `LANG` Python + PyTorch · Jupyter　`SIZE` 8 讲 · 课程持续更新　`STARS` 25.0k
+> `LANG` Python + PyTorch · Jupyter · `SIZE` 8 讲 · 课程持续更新 · `STARS` 25.0k
 
 #### `MECHANISM` 核心机制
 
@@ -311,7 +311,7 @@ def backward(self):
 #### `HIGHLIGHTS` 工程亮点
 
 - 每讲代码随视频逐行写出，notebook 可直接复现
-- "Backprop Ninja" 附 Colab 练习，是整套课程投入产出比最高的一讲
+- “Backprop Ninja”附 Colab 练习，是整套课程投入产出比最高的一讲
 - 逐步重新发明 `torch.nn`，学完 PyTorch 不再是黑盒
 
 #### `OUTPUT` 关键产出
@@ -322,9 +322,9 @@ def backward(self):
 
 ### 2.3 minbpe
 
-> `L3 · Token 层`　极简字节级 BPE，复现 GPT-4 分词器的输出
+> `L3 · Token 层` 极简字节级 BPE，复现 GPT-4 分词器的输出
 >
-> `LANG` Python · regex　`SIZE` 3 个分词器类 + 基类　`STARS` 10.9k
+> `LANG` Python · regex · `SIZE` 3 个分词器类 + 基类 · `STARS` 10.9k
 
 #### `MECHANISM` 核心机制
 
@@ -355,13 +355,13 @@ aaabdaaabac
 #### `OUTPUT` 关键产出
 
 - 自己训练的 `.model`（可加载）与 `.vocab`（可阅读）
-- 亲手验证：为什么中文、代码、数字往往更"费 token"
+- 亲手验证：为什么中文、代码、数字往往更“费 token”
 
 ### 2.4 nanoGPT
 
-> `L4 · 训练层`　最易读的 GPT-2 训练 / 微调实现（README 自 2025-11 起标注过时）
+> `L4 · 训练层` 最易读的 GPT-2 训练 / 微调实现（README 自 2025-11 起标注过时）
 >
-> `LANG` Python + PyTorch　`SIZE` train.py ~300 + model.py ~300 行　`STARS` 64.2k
+> `LANG` Python + PyTorch · `SIZE` train.py ~300 + model.py ~300 行 · `STARS` 64.2k
 
 #### `MECHANISM` 核心机制
 
@@ -395,9 +395,9 @@ idx -> [wte + wpe] -> +----------- Block x N -----------+ -> LN_f -> lm_head -> 
 
 ### 2.5 llm.c
 
-> `L5 · 底层（选修）`　去掉 245MB 的 PyTorch 和 107MB 的 cPython，用纯 C/CUDA 训练 GPT-2
+> `L5 · 底层（选修）` 去掉 245MB 的 PyTorch 和 107MB 的 cPython，用纯 C/CUDA 训练 GPT-2
 >
-> `LANG` C · CUDA · cuDNN / NCCL 可选　`SIZE` CPU 版 ~1,000 行；CUDA 主线 2024 年中约 4–5K 行　`STARS` 31.2k
+> `LANG` C · CUDA · cuDNN / NCCL 可选 · `SIZE` CPU 版 ~1,000 行；CUDA 主线 2024 年中约 4–5K 行 · `STARS` 31.2k
 
 #### `MECHANISM` 核心机制
 
@@ -437,9 +437,9 @@ acts    <- encoded | ln1 | qkv | atty | preatt | att | ... | probs | losses
 
 ### 2.6 nanochat
 
-> `L6 · 产品层`　"$100 能买到的最好的 ChatGPT"：单仓库端到端流水线
+> `L6 · 产品层` “$100 能买到的最好的 ChatGPT”：单仓库端到端流水线
 >
-> `LANG` Python + PyTorch · Rust 分词器 · uv　`SIZE` 2025-10 首发约 8,000 行　`STARS` 59.5k
+> `LANG` Python + PyTorch · Rust 分词器 · uv · `SIZE` 2025-10 首发约 8,000 行 · `STARS` 59.5k
 
 #### `MECHANISM` 核心机制
 
@@ -448,7 +448,7 @@ acts    <- encoded | ln1 | qkv | atty | preatt | att | ... | probs | losses
 3. 优化器为 Muon（矩阵参数）+ AdamW（嵌入等）；评测以 DCLM CORE 为主线（GPT-2 基准 0.256525），辅以 ARC、MMLU、GSM8K、HumanEval。
 4. Time-to-GPT-2 排行榜把研究变成竞速：在 8×H100 上把超过 GPT-2 CORE 所需的墙钟时间越压越短。
 
-**FIG.03 · speedrun 流水线**　编号即执行顺序
+**FIG.03 · speedrun 流水线** 编号即执行顺序
 
 | # | 阶段 | 脚本 | 作用 |
 |---|---|---|---|
@@ -468,7 +468,7 @@ acts    <- encoded | ln1 | qkv | atty | preatt | att | ... | probs | losses
 | 2024-07 | llm.c GPT-2 1.6B | 8×H100 | 24 h | $672 |
 | 2025-10 | nanochat 首发 ~12h 档 | 8×H100 | ~12 h | ≈ $300 |
 | 2026-01 | nanochat d24 基线（CORE 0.2585） | 8×H100 | 3.04 h | ≈ $73 |
-| 2026-03 | 排行榜纪录 "autoresearch round 2"（CORE 0.2626） | 8×H100 | 1.65 h | ≈ $40 |
+| 2026-03 | 排行榜纪录“autoresearch round 2”（CORE 0.2626） | 8×H100 | 1.65 h | ≈ $40 |
 | 现 README | 按 ~2 h、~$24/h 估算 | 8×H100 | ~2 h | **≈ $48**（spot ≈ $15） |
 
 #### `HIGHLIGHTS` 工程亮点
@@ -479,24 +479,24 @@ acts    <- encoded | ln1 | qkv | atty | preatt | att | ... | probs | losses
 
 #### `OUTPUT` 关键产出
 
-- 能写小故事和诗、回答简单问题的聊天模型（约"幼儿园小朋友"水平）
+- 能写小故事和诗、回答简单问题的聊天模型（约“幼儿园小朋友”水平）
 - `report.md`：分词器压缩率、CORE、ARC、MMLU、GSM8K 等
 - 你自己的 Time-to-GPT-2 实验记录
 
 ### 2.7 autoresearch
 
-> `L7 · 智能体层`　让 Coding Agent 通宵替你做 LLM 训练实验：单卡、单文件、单指标
+> `L7 · 智能体层` 让 Coding Agent 通宵替你做 LLM 训练实验：单卡、单文件、单指标
 >
-> `LANG` Python + Markdown · 外接 Coding Agent　`SIZE` train.py ~630 行 + prepare.py + program.md　`STARS` 98.8k · 2026-03 发布
+> `LANG` Python + Markdown · 外接 Coding Agent · `SIZE` train.py ~630 行 + prepare.py + program.md · `STARS` 98.8k · 2026-03 发布
 
 #### `MECHANISM` 核心机制
 
 1. 三个关键文件：`prepare.py`（数据、BPE、dataloader 与评测，Agent 不可改）、`train.py`（模型 + Muon/AdamW + 训练循环，Agent 唯一可改）、`program.md`（人写的研究指令）。
 2. 循环：读指令，改 `train.py`，固定 5 分钟训练，算 `val_bpb`；变好就 git 提交，变差就回滚；记录后进入下一轮。
-3. `val_bpb` = 验证集总交叉熵（nats）÷（ln 2 × 总字节数），与词表大小无关；固定时间预算把"更快"和"更好"折算进同一个分数。
+3. `val_bpb` = 验证集总交叉熵（nats）÷（ln 2 × 总字节数），与词表大小无关；固定时间预算把“更快”和“更好”折算进同一个分数。
 4. 本质是以 LLM 为变异算子的贪心爬山：人定义搜索空间与先验，Agent 负责高频试错。
 
-**FIG.04 · 实验循环**　约 12 次 / 小时
+**FIG.04 · 实验循环** 约 12 次 / 小时
 
 ```mermaid
 ---
@@ -545,7 +545,7 @@ flowchart TB
 
 - 约每小时 12 次实验，一夜约 100 次
 - Karpathy 在 d12 nanochat 上连跑约 2 天、约 700 次实验，找到约 20 条可叠加改进，并迁移到 d24
-- nanochat 排行榜 1.65 h 纪录即标注为 "autoresearch round 2"
+- nanochat 排行榜 1.65 h 纪录即标注为“autoresearch round 2”
 - 仅支持 NVIDIA 单卡（H100 测试）；macOS、Windows、AMD 有社区 fork
 
 #### `OUTPUT` 关键产出
@@ -577,7 +577,7 @@ flowchart TB
 
 ### 4.1 GitHub Star 对比
 
-**FIG.05 · Star 数（千）**　合计 307.8k
+**FIG.05 · Star 数（千）** 合计 307.8k
 
 ```mermaid
 ---
@@ -616,13 +616,13 @@ xychart-beta horizontal
 | `L1` | micrograd | 18.2k | 6% |
 | `L3` | minbpe | 10.9k | 4% |
 
-- `NEWEST, BIGGEST`　最新的 autoresearch 反而最高：社区对"Agent 自主做研究"的兴趣，已超过对"如何训练模型"本身的兴趣。
-- `STILL A CLASSIC`　nanoGPT 已过时仍居第二，说明最短可读实现的教学价值长期有效。
-- `BEST ROI`　minbpe 最低但最"便宜"：一周内可完全掌握，投入产出比极高。
+- `NEWEST, BIGGEST` 最新的 autoresearch 反而最高：社区对“Agent 自主做研究”的兴趣，已超过对“如何训练模型”本身的兴趣。
+- `STILL A CLASSIC` nanoGPT 已过时仍居第二，说明最短可读实现的教学价值长期有效。
+- `BEST ROI` minbpe 最低但最“便宜”：一周内可完全掌握，投入产出比极高。
 
 ### 4.2 达到 GPT-2 能力的成本断崖
 
-**FIG.06 · 对数刻度**　2019 到 2026，约 900 倍；纵轴 2 = $100，3 = $1k，4 = $10k
+**FIG.06 · 对数刻度** 2019 到 2026，约 900 倍；纵轴 2 = $100，3 = $1k，4 = $10k
 
 ```mermaid
 ---
@@ -659,21 +659,21 @@ README 按 ~2 h 估算为 $48 按需、$15 spot。
 
 ### 4.3 学习耗时 × 难度热力图
 
-`冷 → 热`　🟦 1　🟩 2　🟨 3　🟧 4　🟥 5
+`冷 → 热` 难度与耗时按 1–5 分级，1 最轻、5 最重
 
 | 层级 | 项目 | 预计耗时 | 数学强度 | 编码强度 | 调试难度 | 算力成本 | **综合难度** |
 |---|---|---|---|---|---|---|---|
-| `L1` | micrograd | 🟦 1 · 8–12h | 🟨 3 | 🟩 2 | 🟦 1 | 🟦 1 | 🟩 **2** |
-| `L2` | nn-zero-to-hero | 🟧 4 · 40–60h | 🟧 4 | 🟨 3 | 🟨 3 | 🟦 1 | 🟨 **3** |
-| `L3` | minbpe | 🟦 1 · 8–12h | 🟦 1 | 🟩 2 | 🟩 2 | 🟦 1 | 🟩 **2** |
-| `L4` | nanoGPT | 🟩 2 · 15–25h | 🟨 3 | 🟨 3 | 🟨 3 | 🟩 2 | 🟨 **3** |
-| `L5` | llm.c | 🟥 5 · 40–80h | 🟧 4 | 🟥 5 | 🟥 5 | 🟨 3 | 🟥 **5** |
-| `L6` | nanochat | 🟨 3 · 25–40h | 🟨 3 | 🟧 4 | 🟧 4 | 🟧 4 | 🟧 **4** |
-| `L7` | autoresearch | 🟩 2 · 10–20h | 🟩 2 | 🟨 3 | 🟨 3 | 🟨 3 | 🟨 **3** |
+| `L1` | micrograd | 1 · 8–12h | 3 | 2 | 1 | 1 | **2** |
+| `L2` | nn-zero-to-hero | 4 · 40–60h | 4 | 3 | 3 | 1 | **3** |
+| `L3` | minbpe | 1 · 8–12h | 1 | 2 | 2 | 1 | **2** |
+| `L4` | nanoGPT | 2 · 15–25h | 3 | 3 | 3 | 2 | **3** |
+| `L5` | llm.c | 5 · 40–80h | 4 | 5 | 5 | 3 | **5** |
+| `L6` | nanochat | 3 · 25–40h | 3 | 4 | 4 | 4 | **4** |
+| `L7` | autoresearch | 2 · 10–20h | 2 | 3 | 3 | 3 | **3** |
 
 ### 4.4 耗时 × 难度象限
 
-**FIG.07 · 耗时 × 难度象限**　右上为硬骨头；点的颜色即层级色
+**FIG.07 · 耗时 × 难度象限** 右上为硬骨头；点的颜色即层级色
 
 ```mermaid
 ---
@@ -713,7 +713,7 @@ quadrantChart
 
 ### 4.5 时间投入分布
 
-**FIG.08 · 时间投入分布**　标准路线合计约 200 小时；扇区颜色即层级色
+**FIG.08 · 时间投入分布** 标准路线合计约 200 小时；扇区颜色即层级色
 
 ```mermaid
 ---
@@ -754,7 +754,7 @@ pie showData
 
 ### 5.1 17 周标准路线
 
-**FIG.09 · 17 周标准路线**　进度条颜色即层级色
+**FIG.09 · 17 周标准路线** 进度条颜色即层级色
 
 ```mermaid
 ---
@@ -799,7 +799,7 @@ gantt
     第一次通宵实验         :milestone, m1, after p7, 0d
 ```
 
-`◆ 03/07` 第一次通宵实验　选修的 P5 可跳过，整体提前 3 周
+`里程碑 03/07` 第一次通宵实验；选修的 P5 可跳过，整体提前 3 周
 
 ### 5.2 分阶段目标与验收标准
 
@@ -839,7 +839,7 @@ gantt
 
 ### 5.5 各阶段避坑指南
 
-`✕` 常见错误　`✓` 推荐做法　`$` 费用风险
+`✕` 常见错误 · `✓` 推荐做法 · `$` 费用风险
 
 > `P1` **micrograd**
 >
@@ -879,7 +879,7 @@ gantt
 >
 > - $ 最大的坑是钱：GPU 节点空转照样计费，用 tmux 跑，结束立即关机
 > - ✕ 直接上 d24：先 CPU/MPS 小脚本，再 d12 验证全链路，最后 d24
-> - ✕ 期待 ChatGPT 级对话：它是"幼儿园水平"的教学模型，也不适合做个性化应用
+> - ✕ 期待 ChatGPT 级对话：它是“幼儿园水平”的教学模型，也不适合做个性化应用
 > - ✓ 小显存 OOM 就调小单卡 batch；spot 实例务必保存 checkpoint
 
 > `P7` **autoresearch**
@@ -895,19 +895,19 @@ gantt
 
 `YOUR PATH` 把这条路线接到你自己的技术栈上。
 
-> `PYTHON · 主轴`　**前四阶段走快速通道**
+> `PYTHON · 主轴` **前四阶段走快速通道**
 >
 > P1–P4 可以大幅压缩，把省下的时间投入 llm.c、nanochat 和 autoresearch。
 
-> `C++ · 在学`　**llm.c 是最好的练兵场**
+> `C++ · 在学` **llm.c 是最好的练兵场**
 >
-> 手写前向 / 反向、连续内存布局、CUDA kernel 与对拍测试，这套"性能 + 正确性"习惯可直接迁移到机器人与自动驾驶的端侧推理优化。
+> 手写前向 / 反向、连续内存布局、CUDA kernel 与对拍测试，这套“性能 + 正确性”习惯可直接迁移到机器人与自动驾驶的端侧推理优化。
 
-> `RUST · 在学`　**用 Rust 重写 minbpe**
+> `RUST · 在学` **用 Rust 重写 minbpe**
 >
 > 对照社区 `minbpe-rs`，再去读 nanochat 的 Rust 分词器，是语言学习与 LLM 理解的双赢练习。
 
-> `AGENT · 深耕`　**autoresearch 是极简 Harness**
+> `AGENT · 深耕` **autoresearch 是极简 Harness**
 >
 > `program.md` ≈ 指令 / Skill，固定预算 + `val_bpb` ≈ 可验证奖励，git 提交 / 回滚 ≈ 状态管理与安全边界。任何有客观指标的任务都能套用这个循环。
 
@@ -917,19 +917,19 @@ gantt
 
 `REFERENCES`
 
-- [karpathy/micrograd](https://github.com/karpathy/micrograd)　`github.com`
-- [karpathy/nn-zero-to-hero](https://github.com/karpathy/nn-zero-to-hero)　`github.com`
-- [karpathy/minbpe](https://github.com/karpathy/minbpe)　`github.com`
-- [karpathy/nanoGPT](https://github.com/karpathy/nanoGPT)　`github.com`
-- [karpathy/llm.c](https://github.com/karpathy/llm.c)　`github.com`
-- [90 分钟 $20 复现 GPT-2 124M](https://github.com/karpathy/llm.c/discussions/481)　`llm.c #481`
-- [24 小时 $672 复现 GPT-2 1.6B](https://github.com/karpathy/llm.c/discussions/677)　`llm.c #677`
-- [karpathy/nanochat](https://github.com/karpathy/nanochat)　`github.com`
-- [Introducing nanochat](https://github.com/karpathy/nanochat/discussions/1)　`nanochat #1`
-- [karpathy/autoresearch](https://github.com/karpathy/autoresearch)　`github.com`
-- [The Karpathy Loop（2026-03）](https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/)　`fortune.com`
-- [用 autoresearch 构建自主实验 Agent](https://www.freecodecamp.org/news/build-an-ai-agent-that-runs-its-own-llm-experiments-with-autoresearch/)　`freecodecamp.org`
+- [karpathy/micrograd](https://github.com/karpathy/micrograd) · `github.com`
+- [karpathy/nn-zero-to-hero](https://github.com/karpathy/nn-zero-to-hero) · `github.com`
+- [karpathy/minbpe](https://github.com/karpathy/minbpe) · `github.com`
+- [karpathy/nanoGPT](https://github.com/karpathy/nanoGPT) · `github.com`
+- [karpathy/llm.c](https://github.com/karpathy/llm.c) · `github.com`
+- [90 分钟 $20 复现 GPT-2 124M](https://github.com/karpathy/llm.c/discussions/481) · `llm.c #481`
+- [24 小时 $672 复现 GPT-2 1.6B](https://github.com/karpathy/llm.c/discussions/677) · `llm.c #677`
+- [karpathy/nanochat](https://github.com/karpathy/nanochat) · `github.com`
+- [Introducing nanochat](https://github.com/karpathy/nanochat/discussions/1) · `nanochat #1`
+- [karpathy/autoresearch](https://github.com/karpathy/autoresearch) · `github.com`
+- [The Karpathy Loop（2026-03）](https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/) · `fortune.com`
+- [用 autoresearch 构建自主实验 Agent](https://www.freecodecamp.org/news/build-an-ai-agent-that-runs-its-own-llm-experiments-with-autoresearch/) · `freecodecamp.org`
 
 ---
 
-`DATA` 核对于 2026-11-02　·　Star 数取自 GitHub 仓库页　·　耗时、难度、预算为经验估计　·　成本按约 $3 / GPU·小时
+`DATA` 核对于 2026-11-02 · Star 数取自 GitHub 仓库页 · 耗时、难度、预算为经验估计 · 成本按约 $3 / GPU·小时

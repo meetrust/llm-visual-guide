@@ -22,6 +22,8 @@ const [url, width] = [process.argv[2], +(process.argv[3] || 1440)];
       if (/[一-鿿][,:;!?()]|[,:;!?(][一-鿿]/.test(t)) add('half-width punct');
       if (/"/.test(t)) add('ASCII quote');
       if (/  /.test(t)) add('double space');
+      if (/[一-鿿][ \u00a0\u3000]+[一-鿿]/.test(t)) add('space between CJK');
+      if (/[^\s，。、；：！？）」”》][ \u00a0]+[，。、；：！？）」”》]|[，。、；：！？）」”》][ \u00a0]+[^\s·（「“《]|[（「“《][ \u00a0]+\S/.test(t)) add('space next to full-width punct');
       const g = t.match(/[▶↗↑☰⇢✕✓▍◆★☆]/g);
       if (g) g.forEach(c => { out.glyphs[c] = (out.glyphs[c] || 0) + 1; });
     }
