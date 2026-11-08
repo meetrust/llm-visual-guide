@@ -657,6 +657,12 @@ td.nw { white-space: nowrap; }
   .term pre { font-size: var(--fs-2xs); padding: var(--sp-3); }
   .stat b { font-size: 22px; }
 }
+@media (forced-colors: active) {
+  /* mask icons and meters are painted with background, which contrast themes replace with the page colour */
+  .pit li.bad::before, .pit li.good::before { forced-color-adjust: none; background: CanvasText; }
+  a.dn::after { forced-color-adjust: none; background: LinkText; }
+  .m { forced-color-adjust: none; background: linear-gradient(90deg, CanvasText 0 calc(var(--v) * 20%), GrayText calc(var(--v) * 20%) 100%); }
+}
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -809,7 +815,7 @@ td.nw { white-space: nowrap; }
           </figure>
 
           <h3 class="blk-title">前置知识与心智门槛</h3>
-          <div class="tbl sticky-first">
+          <div class="tbl sticky-first" data-scroll-name="前置知识与心智门槛表">
             <table>
               <thead><tr><th scope="col">项目</th><th scope="col">硬前置（必须）</th><th scope="col">软前置（有更好）</th><th scope="col">最难跨过的那道坎</th><th scope="col">门槛</th></tr></thead>
               <tbody>
@@ -840,17 +846,17 @@ td.nw { white-space: nowrap; }
                 </ul>
               </div>
             </figure>
-            <div class="tbl sticky-first skills">
+            <div class="tbl sticky-first skills" data-scroll-name="技能雷达表 · 0–5 分">
               <table>
                 <thead><tr><th scope="col">项目</th><th scope="col">数学</th><th scope="col">PyTorch</th><th scope="col">C/CUDA</th><th scope="col">GPU</th><th scope="col">数据评测</th><th scope="col">Agent</th></tr></thead>
                 <tbody>
-                  <tr style="--c: var(--l1)"><td class="proj">micrograd</td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:2" title="2/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td></tr>
-                  <tr style="--c: var(--l2)"><td class="proj">nn-zero-to-hero</td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:2" title="2/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td></tr>
-                  <tr style="--c: var(--l3)"><td class="proj">minbpe</td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td></tr>
-                  <tr style="--c: var(--l4)"><td class="proj">nanoGPT</td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td></tr>
-                  <tr style="--c: var(--l5)"><td class="proj">llm.c</td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:5" title="5/5"></i></td><td><i class="m" style="--v:5" title="5/5"></i></td><td><i class="m" style="--v:2" title="2/5"></i></td><td><i class="m" style="--v:0" title="0/5"></i></td></tr>
-                  <tr style="--c: var(--l6)"><td class="proj">nanochat</td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:5" title="5/5"></i></td><td><i class="m" style="--v:2" title="2/5"></i></td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:5" title="5/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td></tr>
-                  <tr style="--c: var(--l7)"><td class="proj">autoresearch</td><td><i class="m" style="--v:2" title="2/5"></i></td><td><i class="m" style="--v:4" title="4/5"></i></td><td><i class="m" style="--v:1" title="1/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:3" title="3/5"></i></td><td><i class="m" style="--v:5" title="5/5"></i></td></tr>
+                  <tr style="--c: var(--l1)"><td class="proj">micrograd</td><td><i class="m" style="--v:3" role="img" aria-label="3/5" title="3/5"></i></td><td><i class="m" style="--v:2" role="img" aria-label="2/5" title="2/5"></i></td><td><i class="m" style="--v:0" role="img" aria-label="0/5" title="0/5"></i></td><td><i class="m" style="--v:0" role="img" aria-label="0/5" title="0/5"></i></td><td><i class="m" style="--v:1" role="img" aria-label="1/5" title="1/5"></i></td><td><i class="m" style="--v:0" role="img" aria-label="0/5" title="0/5"></i></td></tr>
+                  <tr style="--c: var(--l2)"><td class="proj">nn-zero-to-hero</td><td><i class="m" style="--v:4" role="img" aria-label="4/5" title="4/5"></i></td><td><i class="m" style="--v:4" role="img" aria-label="4/5" title="4/5"></i></td><td><i class="m" style="--v:0" role="img" aria-label="0/5" title="0/5"></i></td><td><i class="m" style="--v:1" role="img" aria-label="1/5" title="1/5"></i></td><td><i class="m" style="--v:2" role="img" aria-label="2/5" title="2/5"></i></td><td><i class="m" style="--v:0" role="img" aria-label="0/5" title="0/5"></i></td></tr>
+                  <tr style="--c: var(--l3)"><td class="proj">minbpe</td><td><i class="m" style="--v:1" role="img" aria-label="1/5" title="1/5"></i></td><td><i class="m" style="--v:3" role="img" aria-label="3/5" title="3/5"></i></td><td><i class="m" style="--v:1" role="img" aria-label="1/5" title="1/5"></i></td><td><i class="m" style="--v:0" role="img" aria-label="0/5" title="0/5"></i></td><td><i class="m" style="--v:3" role="img" aria-label="3/5" title="3/5"></i></td><td><i class="m" style="--v:0" role="img" aria-label="0/5" title="0/5"></i></td></tr>
+                  <tr style="--c: var(--l4)"><td class="proj">nanoGPT</td><td><i class="m" style="--v:3" role="img" aria-label="3/5" title="3/5"></i></td><td><i class="m" style="--v:4" role="img" aria-label="4/5" title="4/5"></i></td><td><i class="m" style="--v:1" role="img" aria-label="1/5" title="1/5"></i></td><td><i class="m" style="--v:3" role="img" aria-label="3/5" title="3/5"></i></td><td><i class="m" style="--v:3" role="img" aria-label="3/5" title="3/5"></i></td><td><i class="m" style="--v:0" role="img" aria-label="0/5" title="0/5"></i></td></tr>
+                  <tr style="--c: var(--l5)"><td class="proj">llm.c</td><td><i class="m" style="--v:4" role="img" aria-label="4/5" title="4/5"></i></td><td><i class="m" style="--v:1" role="img" aria-label="1/5" title="1/5"></i></td><td><i class="m" style="--v:5" role="img" aria-label="5/5" title="5/5"></i></td><td><i class="m" style="--v:5" role="img" aria-label="5/5" title="5/5"></i></td><td><i class="m" style="--v:2" role="img" aria-label="2/5" title="2/5"></i></td><td><i class="m" style="--v:0" role="img" aria-label="0/5" title="0/5"></i></td></tr>
+                  <tr style="--c: var(--l6)"><td class="proj">nanochat</td><td><i class="m" style="--v:3" role="img" aria-label="3/5" title="3/5"></i></td><td><i class="m" style="--v:5" role="img" aria-label="5/5" title="5/5"></i></td><td><i class="m" style="--v:2" role="img" aria-label="2/5" title="2/5"></i></td><td><i class="m" style="--v:4" role="img" aria-label="4/5" title="4/5"></i></td><td><i class="m" style="--v:5" role="img" aria-label="5/5" title="5/5"></i></td><td><i class="m" style="--v:1" role="img" aria-label="1/5" title="1/5"></i></td></tr>
+                  <tr style="--c: var(--l7)"><td class="proj">autoresearch</td><td><i class="m" style="--v:2" role="img" aria-label="2/5" title="2/5"></i></td><td><i class="m" style="--v:4" role="img" aria-label="4/5" title="4/5"></i></td><td><i class="m" style="--v:1" role="img" aria-label="1/5" title="1/5"></i></td><td><i class="m" style="--v:3" role="img" aria-label="3/5" title="3/5"></i></td><td><i class="m" style="--v:3" role="img" aria-label="3/5" title="3/5"></i></td><td><i class="m" style="--v:5" role="img" aria-label="5/5" title="5/5"></i></td></tr>
                 </tbody>
               </table>
             </div>
@@ -964,7 +970,7 @@ td.nw { white-space: nowrap; }
                     <li>最后一讲回到输入端：分词器是 LLM 许多怪癖的根源。</li>
                   </ol>
                 </div>
-                <div class="tbl">
+                <div class="tbl" data-scroll-name="nn-zero-to-hero 讲次表">
                   <table>
                     <thead><tr><th scope="col">#</th><th scope="col">主题</th><th scope="col">新增零件</th></tr></thead>
                     <tbody>
@@ -1144,7 +1150,7 @@ grads   ← 同样布局再来一份
 m, v    ← AdamW 一阶 / 二阶矩
 acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ probs │ losses</pre>
               </div>
-              <div class="tbl">
+              <div class="tbl" data-scroll-name="llm.c 复现里程碑表">
                 <table>
                   <thead><tr><th scope="col">里程碑</th><th scope="col">硬件</th><th scope="col">时长</th><th scope="col">成本</th><th scope="col">效率</th></tr></thead>
                   <tbody>
@@ -1223,7 +1229,7 @@ acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ prob
                   </div>
                 </div>
               </figure>
-              <div class="tbl">
+              <div class="tbl" data-scroll-name="达到 GPT-2 能力的成本变化表">
                 <table>
                   <thead><tr><th scope="col">时间</th><th scope="col">达到 GPT-2 能力的方案</th><th scope="col">硬件</th><th scope="col">墙钟</th><th scope="col">成本</th></tr></thead>
                   <tbody>
@@ -1333,7 +1339,7 @@ acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ prob
           <span class="sec-no" aria-hidden="true">03</span>
           <div><p class="eyebrow">Side by Side</p><h2>多维对比表</h2><p class="sub">窄屏可横向滑动，首列固定。成本按约 $3 / GPU·小时估算。</p></div>
         </header>
-        <div class="tbl sticky-first compare">
+        <div class="tbl sticky-first compare" data-scroll-name="七个项目多维对比表">
           <table>
             <thead>
               <tr>
@@ -1448,7 +1454,7 @@ acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ prob
 
           <h3 class="blk-title">学习耗时 × 难度热力图</h3>
           <div class="legend"><span>冷 → 热：</span><i class="h1">1</i><i class="h2">2</i><i class="h3">3</i><i class="h4">4</i><i class="h5">5</i></div>
-          <div class="tbl sticky-first heat">
+          <div class="tbl sticky-first heat" data-scroll-name="学习耗时与难度热力表">
             <table>
               <thead><tr><th scope="col">项目</th><th scope="col">预计耗时</th><th scope="col">数学强度</th><th scope="col">编码强度</th><th scope="col">调试难度</th><th scope="col">算力成本</th><th scope="col">综合难度</th></tr></thead>
               <tbody>
@@ -1553,7 +1559,7 @@ acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ prob
           </figure>
 
           <h3 class="blk-title">分阶段目标与验收标准</h3>
-          <div class="tbl sticky-first">
+          <div class="tbl sticky-first" data-scroll-name="分阶段目标与验收标准表">
             <table>
               <thead><tr><th scope="col">阶段</th><th scope="col">周数</th><th scope="col">目标</th><th scope="col">验收标准（Definition of Done）</th><th scope="col">预算</th></tr></thead>
               <tbody>
@@ -1585,7 +1591,7 @@ acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ prob
             </div>
             <div class="sec-body">
               <h3 class="blk-title">总预算参考</h3>
-              <div class="tbl">
+              <div class="tbl" data-scroll-name="总预算参考表">
                 <table>
                   <thead><tr><th scope="col">阶段</th><th scope="col">GPU 费用</th><th scope="col">说明</th></tr></thead>
                   <tbody>
@@ -1983,6 +1989,26 @@ acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ prob
   window.addEventListener("resize", update);
   update();
   totop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" }); });
+
+  /* ---------- wide tables and code scroll inside their frame: make them reachable by keyboard ---------- */
+  var scrollers = Array.prototype.slice.call(document.querySelectorAll(".tbl, .term pre, .fig-body"));
+  function scrollerName(el) {
+    var name = el.getAttribute("data-scroll-name"), term = el.closest(".term"), fig = el.closest(".fig");
+    if (!name && term) { var l = term.querySelector(".term-bar .lbl"); name = l ? "代码 " + l.textContent.trim() : "代码"; }
+    if (!name && fig) { var b = fig.querySelector("figcaption b"); name = b ? b.textContent.trim() : "图表"; }
+    return (name || "表格") + "（可横向滚动）";
+  }
+  function markScrollers() {
+    scrollers.forEach(function (el) {
+      if (el.scrollWidth > el.clientWidth + 1) {
+        el.setAttribute("tabindex", "0"); el.setAttribute("role", "region"); el.setAttribute("aria-label", scrollerName(el));
+      } else { el.removeAttribute("tabindex"); el.removeAttribute("role"); el.removeAttribute("aria-label"); }
+    });
+  }
+  markScrollers();
+  window.addEventListener("resize", markScrollers);
+  window.addEventListener("load", markScrollers);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(markScrollers);
 
   /* ---------- copy buttons ---------- */
   Array.prototype.forEach.call(document.querySelectorAll(".term .copy"), function (btn) {
