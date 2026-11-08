@@ -839,54 +839,54 @@ gantt
 
 ### 5.5 各阶段避坑指南
 
-`✕` 常见错误 · `✓` 推荐做法 · `$` 费用风险
+每条开头标明“误区”（常见错误）或“建议”（推荐做法），`$` 表示费用风险。
 
 > `P1` **micrograd**
 >
-> - ✕ 反向时用 `=` 覆盖梯度：复用节点（如 `a + a`）的梯度会错，必须 `+=`
-> - ✕ 每步训练前忘记梯度清零：梯度跨 step 累积，loss 发散
-> - ✓ 用 `(f(x+h) − f(x−h)) / 2h` 做梯度检查，`h` 取 1e-5 左右
+> - **误区** · 反向时用 `=` 覆盖梯度：复用节点（如 `a + a`）的梯度会错，必须 `+=`
+> - **误区** · 每步训练前忘记梯度清零：梯度跨 step 累积，loss 发散
+> - **建议** · 用 `(f(x+h) − f(x−h)) / 2h` 做梯度检查，`h` 取 1e-5 左右
 
 > `P2` **makemore**
 >
-> - ✕ 初始 loss 远高于 3.30：输出 logits 过于自信，应缩小最后一层初始化
-> - ✕ tanh 大面积饱和（|t| > 0.99）：梯度消失，看激活直方图调初始化
-> - ✕ BatchNorm 推理时仍用 batch 统计量：应切换到 running mean / var
-> - ✓ 手推反向时处处检查 shape，求和注意 `keepdim=True`
+> - **误区** · 初始 loss 远高于 3.30：输出 logits 过于自信，应缩小最后一层初始化
+> - **误区** · tanh 大面积饱和（|t| > 0.99）：梯度消失，看激活直方图调初始化
+> - **误区** · BatchNorm 推理时仍用 batch 统计量：应切换到 running mean / var
+> - **建议** · 手推反向时处处检查 shape，求和注意 `keepdim=True`
 
 > `P3` **GPT / nanoGPT**
 >
-> - ✕ 忘记因果掩码或 `1/√dₖ` 缩放：loss 异常低（偷看未来）或训练不稳
-> - ✕ 生成时上下文超过 `block_size`：采样前裁剪到最后 `block_size` 个 token
-> - ✕ 梯度累积时 loss 没除以累积步数：等效学习率被放大
-> - ✓ Mac 上用 `--device=mps`，没有 Triton 的环境加 `--compile=False`
+> - **误区** · 忘记因果掩码或 `1/√dₖ` 缩放：loss 异常低（偷看未来）或训练不稳
+> - **误区** · 生成时上下文超过 `block_size`：采样前裁剪到最后 `block_size` 个 token
+> - **误区** · 梯度累积时 loss 没除以累积步数：等效学习率被放大
+> - **建议** · Mac 上用 `--device=mps`，没有 Triton 的环境加 `--compile=False`
 
 > `P4` **minbpe**
 >
-> - ✕ 编码时按当前最高频对合并：必须按训练时 merge 的先后顺序
-> - ✕ 用标准库 `re` 跑 GPT-4 正则：`\p{L}` 需要第三方 `regex` 库
-> - ✓ 解码不完整 UTF-8 序列时用 `errors="replace"`
-> - ✓ 编码不可信输入时默认禁止特殊 token，按需显式允许
+> - **误区** · 编码时按当前最高频对合并：必须按训练时 merge 的先后顺序
+> - **误区** · 用标准库 `re` 跑 GPT-4 正则：`\p{L}` 需要第三方 `regex` 库
+> - **建议** · 解码不完整 UTF-8 序列时用 `errors="replace"`
+> - **建议** · 编码不可信输入时默认禁止特殊 token，按需显式允许
 
 > `P5` **llm.c**
 >
-> - ✕ 一上来啃多卡 CUDA 主线：先读 CPU fp32 版，再看 `dev/cuda/` 中单个 kernel 的演进
-> - ✕ 跳过 `download_starter_pack.sh`：缺权重、分词器和 debug state
-> - ✓ 调试时把 Makefile 里的 `-O3` 换成 `-g`，即可在 IDE 中单步
-> - ✓ CPU 训练设置 `OMP_NUM_THREADS`
+> - **误区** · 一上来啃多卡 CUDA 主线：先读 CPU fp32 版，再看 `dev/cuda/` 中单个 kernel 的演进
+> - **误区** · 跳过 `download_starter_pack.sh`：缺权重、分词器和 debug state
+> - **建议** · 调试时把 Makefile 里的 `-O3` 换成 `-g`，即可在 IDE 中单步
+> - **建议** · CPU 训练设置 `OMP_NUM_THREADS`
 
 > `P6` **nanochat**
 >
 > - $ 最大的坑是钱：GPU 节点空转照样计费，用 tmux 跑，结束立即关机
-> - ✕ 直接上 d24：先 CPU/MPS 小脚本，再 d12 验证全链路，最后 d24
-> - ✕ 期待 ChatGPT 级对话：它是“幼儿园水平”的教学模型，也不适合做个性化应用
-> - ✓ 小显存 OOM 就调小单卡 batch；spot 实例务必保存 checkpoint
+> - **误区** · 直接上 d24：先 CPU/MPS 小脚本，再 d12 验证全链路，最后 d24
+> - **误区** · 期待 ChatGPT 级对话：它是“幼儿园水平”的教学模型，也不适合做个性化应用
+> - **建议** · 小显存 OOM 就调小单卡 batch；spot 实例务必保存 checkpoint
 
 > `P7` **autoresearch**
 >
-> - ✕ 把 5 分钟内的微小提升当真：短训练噪声大，重要改动换 seed 复跑
-> - ✕ Agent 改评测或时间预算：在 `program.md` 中禁止，review 时检查是否触碰 `prepare.py`
-> - ✕ 对验证集过拟合：定期在更大 depth 上复核保留的改动
+> - **误区** · 把 5 分钟内的微小提升当真：短训练噪声大，重要改动换 seed 复跑
+> - **误区** · Agent 改评测或时间预算：在 `program.md` 中禁止，review 时检查是否触碰 `prepare.py`
+> - **误区** · 对验证集过拟合：定期在更大 depth 上复核保留的改动
 > - $ Agent API 费用可能超过 GPU 费用，先设上限
 
 ---

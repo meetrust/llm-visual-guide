@@ -547,8 +547,10 @@ td.nw { white-space: nowrap; }
 .pit ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
 .pit li { position: relative; padding-left: 24px; font-size: var(--fs-sm); line-height: 1.65; }
 .pit li::before { position: absolute; left: 0; top: 1px; font-weight: 700; font-family: var(--font-display); }
-.pit li.bad::before { content: "✕"; color: var(--bad); }
-.pit li.good::before { content: "✓"; color: var(--good); }
+/* i-cross / i-check from the Tight Surface sprite, drawn as a mask so the colour follows good / bad; the meaning is in the .sr-only label */
+.pit li.bad::before, .pit li.good::before { content: ""; top: calc((1.65em - 13px) / 2); width: 13px; height: 13px; background: currentColor; -webkit-mask: var(--mk) center / contain no-repeat; mask: var(--mk) center / contain no-repeat; }
+.pit li.bad::before { --mk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.2 4.2 11.8 11.8M11.8 4.2 4.2 11.8' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"); color: var(--bad); }
+.pit li.good::before { --mk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.2 8.4 6.6 11.6 12.8 4.6' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); color: var(--good); }
 .pit li.money::before { content: "$"; color: var(--amber); }
 
 .advice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
@@ -1603,62 +1605,62 @@ acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ prob
             <div class="pit" style="--c: var(--l1)">
               <h4><span class="tag">P1</span>micrograd</h4>
               <ul>
-                <li class="bad">反向时用 <code>=</code> 覆盖梯度：复用节点（如 <code>a + a</code>）的梯度会错，必须 <code>+=</code></li>
-                <li class="bad">每步训练前忘记梯度清零：梯度跨 step 累积，loss 发散</li>
-                <li class="good">用 <code>(f(x+h) − f(x−h)) / 2h</code> 做梯度检查，<code>h</code> 取 1e-5 左右</li>
+                <li class="bad"><span class="sr-only">误区：</span>反向时用 <code>=</code> 覆盖梯度：复用节点（如 <code>a + a</code>）的梯度会错，必须 <code>+=</code></li>
+                <li class="bad"><span class="sr-only">误区：</span>每步训练前忘记梯度清零：梯度跨 step 累积，loss 发散</li>
+                <li class="good"><span class="sr-only">建议：</span>用 <code>(f(x+h) − f(x−h)) / 2h</code> 做梯度检查，<code>h</code> 取 1e-5 左右</li>
               </ul>
             </div>
             <div class="pit" style="--c: var(--l2)">
               <h4><span class="tag">P2</span>makemore</h4>
               <ul>
-                <li class="bad">初始 loss 远高于 3.30：输出 logits 过于自信，应缩小最后一层初始化</li>
-                <li class="bad">tanh 大面积饱和（|t| &gt; 0.99）：梯度消失，看激活直方图调初始化</li>
-                <li class="bad">BatchNorm 推理时仍用 batch 统计量：应切换到 running mean / var</li>
-                <li class="good">手推反向时处处检查 shape，求和注意 <code>keepdim=True</code></li>
+                <li class="bad"><span class="sr-only">误区：</span>初始 loss 远高于 3.30：输出 logits 过于自信，应缩小最后一层初始化</li>
+                <li class="bad"><span class="sr-only">误区：</span>tanh 大面积饱和（|t| &gt; 0.99）：梯度消失，看激活直方图调初始化</li>
+                <li class="bad"><span class="sr-only">误区：</span>BatchNorm 推理时仍用 batch 统计量：应切换到 running mean / var</li>
+                <li class="good"><span class="sr-only">建议：</span>手推反向时处处检查 shape，求和注意 <code>keepdim=True</code></li>
               </ul>
             </div>
             <div class="pit" style="--c: var(--l4)">
               <h4><span class="tag">P3</span>GPT / nanoGPT</h4>
               <ul>
-                <li class="bad">忘记因果掩码或 <code>1/√dₖ</code> 缩放：loss 异常低（偷看未来）或训练不稳</li>
-                <li class="bad">生成时上下文超过 <code>block_size</code>：采样前裁剪到最后 <code>block_size</code> 个 token</li>
-                <li class="bad">梯度累积时 loss 没除以累积步数：等效学习率被放大</li>
-                <li class="good">Mac 上用 <code>--device=mps</code>，没有 Triton 的环境加 <code>--compile=False</code></li>
+                <li class="bad"><span class="sr-only">误区：</span>忘记因果掩码或 <code>1/√dₖ</code> 缩放：loss 异常低（偷看未来）或训练不稳</li>
+                <li class="bad"><span class="sr-only">误区：</span>生成时上下文超过 <code>block_size</code>：采样前裁剪到最后 <code>block_size</code> 个 token</li>
+                <li class="bad"><span class="sr-only">误区：</span>梯度累积时 loss 没除以累积步数：等效学习率被放大</li>
+                <li class="good"><span class="sr-only">建议：</span>Mac 上用 <code>--device=mps</code>，没有 Triton 的环境加 <code>--compile=False</code></li>
               </ul>
             </div>
             <div class="pit" style="--c: var(--l3)">
               <h4><span class="tag">P4</span>minbpe</h4>
               <ul>
-                <li class="bad">编码时按当前最高频对合并：必须按训练时 merge 的先后顺序</li>
-                <li class="bad">用标准库 <code>re</code> 跑 GPT-4 正则：<code>\p{L}</code> 需要第三方 <code>regex</code> 库</li>
-                <li class="good">解码不完整 UTF-8 序列时用 <code>errors="replace"</code></li>
-                <li class="good">编码不可信输入时默认禁止特殊 token，按需显式允许</li>
+                <li class="bad"><span class="sr-only">误区：</span>编码时按当前最高频对合并：必须按训练时 merge 的先后顺序</li>
+                <li class="bad"><span class="sr-only">误区：</span>用标准库 <code>re</code> 跑 GPT-4 正则：<code>\p{L}</code> 需要第三方 <code>regex</code> 库</li>
+                <li class="good"><span class="sr-only">建议：</span>解码不完整 UTF-8 序列时用 <code>errors="replace"</code></li>
+                <li class="good"><span class="sr-only">建议：</span>编码不可信输入时默认禁止特殊 token，按需显式允许</li>
               </ul>
             </div>
             <div class="pit" style="--c: var(--l5)">
               <h4><span class="tag">P5</span>llm.c</h4>
               <ul>
-                <li class="bad">一上来啃多卡 CUDA 主线：先读 CPU fp32 版，再看 <code>dev/cuda/</code> 中单个 kernel 的演进</li>
-                <li class="bad">跳过 <code>download_starter_pack.sh</code>：缺权重、分词器和 debug state</li>
-                <li class="good">调试时把 Makefile 里的 <code>-O3</code> 换成 <code>-g</code>，即可在 IDE 中单步</li>
-                <li class="good">CPU 训练设置 <code>OMP_NUM_THREADS</code></li>
+                <li class="bad"><span class="sr-only">误区：</span>一上来啃多卡 CUDA 主线：先读 CPU fp32 版，再看 <code>dev/cuda/</code> 中单个 kernel 的演进</li>
+                <li class="bad"><span class="sr-only">误区：</span>跳过 <code>download_starter_pack.sh</code>：缺权重、分词器和 debug state</li>
+                <li class="good"><span class="sr-only">建议：</span>调试时把 Makefile 里的 <code>-O3</code> 换成 <code>-g</code>，即可在 IDE 中单步</li>
+                <li class="good"><span class="sr-only">建议：</span>CPU 训练设置 <code>OMP_NUM_THREADS</code></li>
               </ul>
             </div>
             <div class="pit" style="--c: var(--l6)">
               <h4><span class="tag">P6</span>nanochat</h4>
               <ul>
                 <li class="money">最大的坑是钱：GPU 节点空转照样计费，用 tmux 跑，结束立即关机</li>
-                <li class="bad">直接上 d24：先 CPU/MPS 小脚本，再 d12 验证全链路，最后 d24</li>
-                <li class="bad">期待 ChatGPT 级对话：它是“幼儿园水平”的教学模型，也不适合做个性化应用</li>
-                <li class="good">小显存 OOM 就调小单卡 batch；spot 实例务必保存 checkpoint</li>
+                <li class="bad"><span class="sr-only">误区：</span>直接上 d24：先 CPU/MPS 小脚本，再 d12 验证全链路，最后 d24</li>
+                <li class="bad"><span class="sr-only">误区：</span>期待 ChatGPT 级对话：它是“幼儿园水平”的教学模型，也不适合做个性化应用</li>
+                <li class="good"><span class="sr-only">建议：</span>小显存 OOM 就调小单卡 batch；spot 实例务必保存 checkpoint</li>
               </ul>
             </div>
             <div class="pit" style="--c: var(--l7)">
               <h4><span class="tag">P7</span>autoresearch</h4>
               <ul>
-                <li class="bad">把 5 分钟内的微小提升当真：短训练噪声大，重要改动换 seed 复跑</li>
-                <li class="bad">Agent 改评测或时间预算：在 <code>program.md</code> 中禁止，review 时检查是否触碰 <code>prepare.py</code></li>
-                <li class="bad">对验证集过拟合：定期在更大 depth 上复核保留的改动</li>
+                <li class="bad"><span class="sr-only">误区：</span>把 5 分钟内的微小提升当真：短训练噪声大，重要改动换 seed 复跑</li>
+                <li class="bad"><span class="sr-only">误区：</span>Agent 改评测或时间预算：在 <code>program.md</code> 中禁止，review 时检查是否触碰 <code>prepare.py</code></li>
+                <li class="bad"><span class="sr-only">误区：</span>对验证集过拟合：定期在更大 depth 上复核保留的改动</li>
                 <li class="money">Agent API 费用可能超过 GPU 费用，先设上限</li>
               </ul>
             </div>
