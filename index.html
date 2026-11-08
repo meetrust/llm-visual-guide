@@ -418,7 +418,7 @@ tbody tr:last-child th[scope="row"] { border-bottom: 0; }
 /* ---------- terminal blocks ---------- */
 .term { border-radius: var(--r-md); overflow: hidden; border: 1px solid #1f2a3f; background: #070a10; }
 .term-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); background: #0d121c; border-bottom: 1px solid #1a2335; font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--faint); }
-.term-bar .lbl::before { content: "▍"; color: var(--c, var(--amber)); margin-right: 6px; }
+.term-bar .lbl::before { content: ""; display: inline-block; width: 3px; height: 12px; margin-right: 8px; vertical-align: -1px; border-radius: 2px; background: var(--c, var(--amber)); }
 .copy { min-height: 28px; font: 500 var(--fs-2xs) var(--font-body); color: var(--dim); background: transparent; cursor: pointer; border: 1px solid #26324a; border-radius: 6px; padding: 2px 10px; transition: color var(--dur), border-color var(--dur), background var(--dur); }
 .copy.ok { color: var(--good); border-color: var(--good); }
 .term pre { margin: 0; padding: var(--sp-4); overflow-x: auto; font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.6; color: #cdd7e6; }
