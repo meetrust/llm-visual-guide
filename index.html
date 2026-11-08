@@ -628,13 +628,13 @@ td.nw { white-space: nowrap; }
   :root { --fs-body: 15px; --fs-lg: 17px; --fs-xl: 20px; }
   .col { gap: 72px; }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .calib, .split, .side, .pits, .advice, .grid-2, .sources, .insights { grid-template-columns: 1fr; }
+  .calib, .split, .side, .pits, .advice, .grid-2, .sources, .insights { grid-template-columns: minmax(0, 1fr); }
   .ladder li { margin-left: calc(var(--step) * 8px); }
-  .mod-head { padding: var(--sp-5) var(--sp-4) var(--sp-4); grid-template-columns: 1fr; }
+  .mod-head { padding: var(--sp-5) var(--sp-4) var(--sp-4); grid-template-columns: minmax(0, 1fr); }
   .mod-idx { font-size: 34px; }
   .mod-head h3 { font-size: var(--fs-xl); }
   .mod-body { padding: var(--sp-4); }
-  .sec-head { grid-template-columns: 1fr; gap: 6px; }
+  .sec-head { grid-template-columns: minmax(0, 1fr); gap: 6px; }
   .fig-body { padding: var(--sp-4); }
   .bars li, .bars-axis { grid-template-columns: 118px minmax(0, 1fr) 48px; gap: var(--sp-2); }
   .bars .nm { font-size: var(--fs-2xs); }
@@ -645,7 +645,7 @@ td.nw { white-space: nowrap; }
   .dn-need .full { display: none; }
   .dn-need .short { display: inline; }
   .dn[data-node="lc"] { width: min(80%, 280px); }
-  .pipe-row { grid-template-columns: 1fr; gap: var(--sp-2); }
+  .pipe-row { grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); }
   .pipe-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
   .pipe-steps li::after { display: none; }
   .pipe-join { margin-left: 0; }
@@ -1995,10 +1995,19 @@ acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ prob
         btn.classList.toggle("ok", ok);
         setTimeout(function () { btn.textContent = "复制"; btn.classList.remove("ok"); }, 1600);
       }
+      /* fallback for embeds whose permissions policy blocks the async Clipboard API */
+      function legacy() {
+        var ta = document.createElement("textarea"), ok = false;
+        ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.top = "-1000px"; ta.style.opacity = "0";
+        document.body.appendChild(ta); ta.select();
+        try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+        document.body.removeChild(ta); btn.focus();
+        done(ok);
+      }
       try {
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
-        else done(false);
-      } catch (err) { done(false); }
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { done(true); }, legacy);
+        else legacy();
+      } catch (err) { legacy(); }
     });
   });
 })();
