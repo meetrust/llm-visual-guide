@@ -86,6 +86,6 @@ python3 -m http.server 8000
 
 ## 同系列 · Companion project
 
-[《斯坦福 AI 课程地图》](https://github.com/meetrust/stanford-ai-courses)：10 门斯坦福 AI 核心课程的依赖图谱、课程档案、对比矩阵与学习路线。[在线访问](https://meetrust.github.io/stanford-ai-courses/)
+[《斯坦福 AI 课程地图》](https://github.com/meetrust/stanford-ai-courses)：11 门斯坦福 AI 核心课程的依赖图谱、课程档案、对比矩阵与学习路线。[在线访问](https://meetrust.github.io/stanford-ai-courses/)
 
-[Stanford AI Course Map](https://github.com/meetrust/stanford-ai-courses): a dependency graph, course dossiers, a comparison matrix and learning paths for 10 core Stanford AI courses. [Live site](https://meetrust.github.io/stanford-ai-courses/)
+[Stanford AI Course Map](https://github.com/meetrust/stanford-ai-courses): a dependency graph, course dossiers, a comparison matrix and learning paths for 11 core Stanford AI courses. [Live site](https://meetrust.github.io/stanford-ai-courses/)
