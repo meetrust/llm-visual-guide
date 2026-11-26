@@ -84,8 +84,12 @@ python3 -m http.server 8000
 - 耗时、难度与预算为经验估计，云 GPU 成本按约 $3 / GPU·小时计算。<br><sub>Time, difficulty and budget are experience-based estimates; cloud GPU cost assumes about $3 per GPU-hour.</sub>
 - 页面内全部引用见第 07 节“来源”。<br><sub>All references are listed in section 07, Sources.</sub>
 
-## 同系列 · Companion project
+## 同系列 · Companion projects
 
 [《斯坦福 AI 课程地图》](https://github.com/meetrust/stanford-ai-courses)：11 门斯坦福 AI 核心课程的依赖图谱、课程档案、对比矩阵与学习路线。[在线访问](https://meetrust.github.io/stanford-ai-courses/)
 
 [Stanford AI Course Map](https://github.com/meetrust/stanford-ai-courses): a dependency graph, course dossiers, a comparison matrix and learning paths for 11 core Stanford AI courses. [Live site](https://meetrust.github.io/stanford-ai-courses/)
+
+[《大模型 Attention 架构与技术路线对照》](https://github.com/meetrust/attention-architectures)：11 组国产大模型、22 个模型版本如何给注意力减负，涵盖混合线性、滑动窗口与动态稀疏。[在线访问](https://meetrust.github.io/attention-architectures/)
+
+[Attention Architectures in Chinese LLMs](https://github.com/meetrust/attention-architectures): how 11 Chinese LLM families (22 model versions) make attention cheaper with hybrid linear, sliding-window and dynamic sparse attention. [Live site](https://meetrust.github.io/attention-architectures/)
