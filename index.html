@@ -352,7 +352,7 @@ section[id], article[id] { scroll-margin-top: var(--sp-5); }
   transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), opacity var(--dur) var(--ease);
 }
 .dn::before { content: ""; position: absolute; left: 12px; right: 12px; top: -1px; height: 2px; border-radius: 2px; background: var(--c); box-shadow: 0 0 12px var(--c); }
-a.dn::after { content: ""; position: absolute; right: 10px; top: 10px; width: 13px; height: 13px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.8 11.2 11 5M6.2 5H11v4.8' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.8 11.2 11 5M6.2 5H11v4.8' fill='none' stroke='%23000' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; color: var(--faint); transition: color var(--dur), transform var(--dur) var(--ease); }
+a.dn::after { content: ""; position: absolute; right: 10px; top: 10px; width: 13px; height: 13px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 7h10v10'/%3E%3Cpath d='M7 17 17 7'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 7h10v10'/%3E%3Cpath d='M7 17 17 7'/%3E%3C/svg%3E") center / contain no-repeat; color: var(--faint); transition: color var(--dur), transform var(--dur) var(--ease); }
 .dn.span { justify-self: center; width: min(72%, 400px); }
 .dn[data-node="bpe"] { justify-self: end; width: min(100%, 300px); }
 .dn[data-node="ng"] { justify-self: start; width: min(100%, 300px); }
@@ -547,10 +547,10 @@ td.nw { white-space: nowrap; }
 .pit ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
 .pit li { position: relative; padding-left: 24px; font-size: var(--fs-sm); line-height: 1.65; }
 .pit li::before { position: absolute; left: 0; top: 1px; font-weight: 700; font-family: var(--font-display); }
-/* i-cross / i-check from the Tight Surface sprite, drawn as a mask so the colour follows good / bad; the meaning is in the .sr-only label */
+/* Lucide x / check (same paths as i-x / i-check in the Tight Surface sprite), drawn as a mask so the colour follows good / bad; the meaning is in the .sr-only label */
 .pit li.bad::before, .pit li.good::before { content: ""; top: calc((1.65em - 13px) / 2); width: 13px; height: 13px; background: currentColor; -webkit-mask: var(--mk) center / contain no-repeat; mask: var(--mk) center / contain no-repeat; }
-.pit li.bad::before { --mk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.2 4.2 11.8 11.8M11.8 4.2 4.2 11.8' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"); color: var(--bad); }
-.pit li.good::before { --mk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.2 8.4 6.6 11.6 12.8 4.6' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); color: var(--good); }
+.pit li.bad::before { --mk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E"); color: var(--bad); }
+.pit li.good::before { --mk: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E"); color: var(--good); }
 .pit li.money::before { content: "$"; color: var(--amber); }
 
 .advice { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); }
@@ -564,8 +564,10 @@ td.nw { white-space: nowrap; }
 .sources a small { color: var(--faint); font-family: var(--font-mono); font-size: var(--fs-2xs); }
 .sources a span { font-size: var(--fs-sm); }
 .end { margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: 1px dashed var(--rule); font-size: var(--fs-xs); color: var(--faint); }
+.end p { margin: 0; max-width: 75ch; }
+.end .nw { white-space: nowrap; }
 
-.i { display: inline-block; width: 1em; height: 1em; flex: none; vertical-align: -0.14em; }
+.i { display: inline-block; width: 1em; height: 1em; flex: none; vertical-align: -0.14em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; } /* Lucide icons: sprite symbols carry geometry only */
 .totop { position: fixed; right: var(--sp-4); bottom: var(--sp-4); z-index: 40; width: 44px; height: 44px; border-radius: var(--r-md); border: 1px solid var(--rule); background: rgba(17, 23, 35, .92); color: var(--amber); cursor: pointer; display: grid; place-items: center; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity var(--dur), transform var(--dur) var(--ease), border-color var(--dur); }
 .totop .i { width: 18px; height: 18px; }
 .menu-btn .i { width: 16px; height: 16px; }
@@ -672,9 +674,10 @@ td.nw { white-space: nowrap; }
 </style>
 </head>
 <body>
+<!-- @license lucide-static v1.71.0 - ISC -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
-  <symbol id="i-up" viewBox="0 0 16 16"><path d="M8 13V3.6M3.8 7.6 8 3.4l4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-  <symbol id="i-menu" viewBox="0 0 16 16"><path d="M2.6 4h10.8M2.6 8h10.8M2.6 12h10.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
+  <symbol id="i-arrow-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></symbol>
 </svg>
 <a class="skip" href="#overview">跳到正文</a>
 <div class="progress" aria-hidden="true"><span id="bar"></span></div>
@@ -1708,14 +1711,14 @@ acts    ← encoded │ ln1 │ qkv │ atty │ preatt │ att │ ... │ prob
           <li><a href="https://fortune.com/2026/03/17/andrej-karpathy-loop-autonomous-ai-agents-future/" target="_blank" rel="noopener"><small>fortune.com</small><span>The Karpathy Loop（2026-03）</span></a></li>
           <li><a href="https://www.freecodecamp.org/news/build-an-ai-agent-that-runs-its-own-llm-experiments-with-autoresearch/" target="_blank" rel="noopener"><small>freecodecamp.org</small><span>用 autoresearch 构建自主实验 Agent</span></a></li>
         </ul>
-        <footer class="end">与《斯坦福 AI 课程地图》同一设计系列 · 数据核对于 2026-11-02 · Star 数取自 GitHub 仓库页 · 耗时、难度、预算为经验估计 · 成本按约 $3 / GPU·小时</footer>
+        <footer class="end"><p><span class="nw">与《斯坦福 AI 课程地图》同一设计系列</span> · <span class="nw">数据核对于 2026-11-02</span> · <span class="nw">Star 数取自 GitHub 仓库页</span> · <span class="nw">耗时、难度、预算为经验估计</span> · <span class="nw">成本按约 $3 / GPU·小时</span></p></footer>
       </section>
 
     </div>
   </main>
 </div>
 
-<button class="totop" id="totop" type="button" aria-label="回到顶部"><svg class="i" aria-hidden="true"><use href="#i-up"/></svg></button>
+<button class="totop" id="totop" type="button" aria-label="回到顶部"><svg class="i" aria-hidden="true"><use href="#i-arrow-up"/></svg></button>
 
 <script>
 (function () {
